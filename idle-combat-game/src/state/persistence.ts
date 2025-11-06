@@ -1,6 +1,7 @@
 // src/state/persistence.ts
 
-import { GameState } from "../types/game";
+// src/state/persistence.ts
+import type { GameState } from "../types/game";
 import { getInitialState } from "./initialState";
 
 export const loadGame = (): GameState => {

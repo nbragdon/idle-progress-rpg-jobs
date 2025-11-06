@@ -10,7 +10,7 @@ import SkillsTab from "./SkillsTab";
 import AbilitiesTab from "./AbilitiesTab";
 import BossTab from "./BossTab";
 import AscensionTab from "./AscensionTab";
-import { FaBriefcase } from "react-icons/fa";
+import { FaBriefcase, FaChartBar, FaGraduationCap, FaFistRaised, FaSkull, FaRedoAlt } from "react-icons/fa"; // Added missing icon imports
 import { BsLayersFill } from "react-icons/bs";
 import { RiSwordFill } from "react-icons/ri";
 import { BiRefresh } from "react-icons/bi";
@@ -25,8 +25,8 @@ const AlertToast: React.FC<AlertToastProps> = ({ message, visible }) => (
   // Assuming the "z-50" class ensures the toast appears over other content
   <div
     className={`fixed bottom-4 right-4 p-4 rounded-lg shadow-xl transition-opacity duration-300 z-50 ${visible
-        ? "opacity-100 bg-green-600"
-        : "opacity-0 pointer-events-none bg-green-600"
+      ? "opacity-100 bg-green-600"
+      : "opacity-0 pointer-events-none bg-green-600"
       }`}
   >
     <p className="text-white font-semibold">{message}</p>
@@ -40,21 +40,34 @@ const App: React.FC = () => {
     gameState,
     alert,
     maxLimits,
-    isAscensionVisible,
-    tabs,
+    // ADDED: Variables missing from the original useGameState export
+    activeTab,
+    setTab,
     playerStats,
     currentBossData,
-    setTab,
+    isAscensionVisible,
+    tabs,
+    startBossBattle,
+
     // All Mutators (Functions to change state)
     toggleJobActive,
     toggleSkillActive,
     toggleAbilityTraining,
-    startBossBattle,
     buyAscensionUpgrade,
     ascend,
   } = useGameState();
 
-  const activeTab = gameState.activeTab;
+  // The activeTab constant is now retrieved directly from the hook.
+
+  // NOTE: Styling classes for tabs moved here for self-contained component
+  const baseTabClass = "flex items-center space-x-2 px-4 py-2 text-sm font-medium rounded-t-lg transition-colors duration-200";
+
+  const tabClasses = {
+    active: `${baseTabClass} bg-gray-600 text-white border-b-2 border-indigo-400`,
+    inactive: `${baseTabClass} text-gray-400 hover:bg-gray-700 hover:text-white`,
+    disabled: `${baseTabClass} text-gray-500 cursor-not-allowed bg-gray-800 opacity-50`,
+  };
+
 
   return (
     <div className="min-h-screen bg-gray-900 text-white font-sans p-4 flex flex-col items-center">
@@ -104,18 +117,17 @@ const App: React.FC = () => {
         </div>
 
         {/* Tab Navigation (Using refactored classes) */}
-        <div className="tab-nav-container">
+        <div className="flex border-b border-gray-700 -mb-px overflow-x-auto whitespace-nowrap">
           {tabs.map((tab) => (
             <button
               key={tab.id}
               onClick={() => !tab.disabled && setTab(tab.id)}
               disabled={tab.disabled}
-              className={`tab-button-base ${tab.disabled
-                  ? "tab-button-disabled"
-                  : activeTab === tab.id
-                    ? "tab-button-active"
-                    : "tab-button-inactive"
-                }`}
+              className={tab.disabled
+                ? tabClasses.disabled
+                : activeTab === tab.id
+                  ? tabClasses.active
+                  : tabClasses.inactive}
             >
               <tab.icon className="w-4 h-4" />
               <span>{tab.name}</span>
@@ -124,7 +136,7 @@ const App: React.FC = () => {
         </div>
 
         {/* Tab Content Rendering */}
-        <div className="min-h-[400px]">
+        <div className="min-h-[400px] mt-4">
           {activeTab === "Jobs" && (
             <JobsTab
               jobs={gameState.jobs}
@@ -177,3 +189,4 @@ const App: React.FC = () => {
 };
 
 export default App;
+
