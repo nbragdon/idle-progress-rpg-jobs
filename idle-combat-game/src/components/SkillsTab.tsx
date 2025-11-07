@@ -3,22 +3,40 @@
 import React from "react";
 import type { GameState } from "../types/game";
 import { SKILL_DATA } from "../core/data";
-import { calculateLevelFromExp } from "../core/utils";
+import { calculateLevelFromExp, isSkillAvailable, calculateTotalSkillLevels } from "../core/utils";
 import type { SkillDefinition } from "../types/data";
 
 interface SkillsTabProps {
   skills: GameState["skills"];
+  gameState: GameState;
   maxActiveSkills: number;
   toggleSkillActive: (skillId: string) => void;
 }
 
 const SkillsTab: React.FC<SkillsTabProps> = ({
   skills,
+  gameState,
   maxActiveSkills,
   toggleSkillActive,
 }) => {
-  const skillIds = Object.keys(SKILL_DATA);
+  const allSkillIds = Object.keys(SKILL_DATA);
+  const availableSkillIds = allSkillIds.filter(skillId => isSkillAvailable(skillId, gameState));
   const activeCount = Object.values(skills).filter((s) => s.isActive).length;
+
+  // Find the next locked skill to show as a milestone
+  const totalSkillLevels = calculateTotalSkillLevels(gameState);
+  const nextLockedSkill = allSkillIds
+    .filter(skillId => !isSkillAvailable(skillId, gameState))
+    .map(skillId => {
+      const skillDef = SKILL_DATA[skillId];
+      const condition = skillDef.unlockConditions?.[0];
+      if (condition?.type === "skillTotalLevels") {
+        return { skillId, requirement: `Total Skill Levels: ${condition.value}`, current: totalSkillLevels, needed: condition.value };
+      }
+      return null;
+    })
+    .filter(Boolean)
+    .sort((a, b) => (a?.needed || 0) - (b?.needed || 0))[0];
 
   return (
     <div className="space-y-8 animate-fade-in">
@@ -42,7 +60,7 @@ const SkillsTab: React.FC<SkillsTabProps> = ({
       </div>
 
       <div className="grid gap-5 sm:gap-6 md:grid-cols-1 lg:grid-cols-2">
-        {skillIds.map((skillId) => {
+        {availableSkillIds.map((skillId) => {
           const skill = skills[skillId];
           const data = SKILL_DATA[skillId] as SkillDefinition;
           const { level, currentLevelExp, expNeeded } = calculateLevelFromExp(skill.exp);
@@ -137,6 +155,27 @@ const SkillsTab: React.FC<SkillsTabProps> = ({
           );
         })}
       </div>
+
+      {/* Upcoming Milestone */}
+      {nextLockedSkill && (
+        <div className="mt-8 rounded-xl border border-purple-500/20 bg-slate-800/30 backdrop-blur-sm p-4">
+          <div className="flex items-center gap-3 mb-2">
+            <span className="text-purple-400 text-sm font-semibold uppercase tracking-wider">Upcoming Milestone</span>
+          </div>
+          <div className="flex items-center justify-between">
+            <span className="text-white/80 text-sm">{nextLockedSkill.requirement}</span>
+            <span className="text-purple-400 font-semibold text-sm">
+              {nextLockedSkill.current} / {nextLockedSkill.needed}
+            </span>
+          </div>
+          <div className="mt-2 h-1.5 w-full overflow-hidden rounded-full bg-slate-700/50">
+            <div
+              className="h-full rounded-full bg-gradient-to-r from-purple-500 to-pink-500 transition-all duration-500"
+              style={{ width: `${Math.min(100, (nextLockedSkill.current / nextLockedSkill.needed) * 100)}%` }}
+            />
+          </div>
+        </div>
+      )}
     </div>
   );
 };

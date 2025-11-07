@@ -13,6 +13,7 @@ import {
 
 // Import the necessary types and the new enum from game.ts
 import type { StatId } from "../types/game";
+import { StatValue } from "../types/game";
 
 // Replacing lucide-react with react-icons (using Font Awesome and Game-icons for similarity)
 import {
@@ -32,198 +33,100 @@ import {
   GiLightningSpanner,
   GiStarFormation,
 } from "react-icons/gi";
-import { FaBurst, FaGears } from "react-icons/fa6";
+import { FaBurst } from "react-icons/fa6";
 import type { IconBaseProps } from "react-icons";
 
 
 // --- STATS ---
 export const STAT_MAP: Record<StatId, StatDefinition> = {
   // Primary Combat Stats (Scaled by Jobs)
-  STR: {
-    id: "STR",
+  [StatValue.STR]: {
+    id: StatValue.STR,
     name: "Strength",
     desc: "Increases Physical Damage.",
     icon: GiCrossedSwords, // Swords -> GiCrossedSwords
   },
-  DEX: {
-    id: "DEX",
+  [StatValue.DEX]: {
+    id: StatValue.DEX,
     name: "Dexterity",
     desc: "Increases damage and attack speed.",
     icon: GiTargetDummy, // Target -> GiTargetDummy
   },
-  AGI: {
-    id: "AGI",
+  [StatValue.AGI]: {
+    id: StatValue.AGI,
     name: "Agility",
     desc: "Increases attack speed and evasion.",
     icon: FaFeatherAlt, // Feather -> FaFeatherAlt
   },
-  TGH: {
-    id: "TGH",
+  [StatValue.TGH]: {
+    id: StatValue.TGH,
     name: "Toughness",
     desc: "Increases Max HP and reduces Physical damage taken.",
     icon: GiShieldImpact, // Shield -> GiShieldImpact
   },
-  CON: {
-    id: "CON",
+  [StatValue.CON]: {
+    id: StatValue.CON,
     name: "Constitution",
     desc: "Increases Max HP and regeneration.",
     icon: FaHeart, // Heart -> FaHeart
   },
-  INT: {
-    id: "INT",
+  [StatValue.INT]: {
+    id: StatValue.INT,
     name: "Intelligence",
     desc: "Increases Magic Damage.",
     icon: FaBookOpen, // BookOpen -> FaBookOpen
   },
 
   // Secondary Combat & Utility Stats
-  FRT: {
-    id: "FRT",
+  [StatValue.FRT]: {
+    id: StatValue.FRT,
     name: "Fortitude",
     desc: "Reduces Magic damage taken.",
     icon: FaAnchor, // Anchor -> FaAnchor
   },
-  CONC: {
-    id: "CONC",
+  [StatValue.CONC]: {
+    id: StatValue.CONC,
     name: "Concentration",
     desc: "Increases chance to apply status effects.",
     icon: FaBolt, // Bolt -> FaBolt
   },
-  RES: {
-    id: "RES",
+  [StatValue.RES]: {
+    id: StatValue.RES,
     name: "Resistance",
     desc: "Decreases chance of opponent applying status effects.",
     icon: FaSyncAlt, // RefreshCw -> FaSyncAlt
   },
-  CRIT_C: {
-    id: "CRIT_C",
+  [StatValue.CRIT_C]: {
+    id: StatValue.CRIT_C,
     name: "Crit Chance",
     desc: "Chance to deal extra damage (Decimal value).",
     icon: FaDiceD6, // Dices -> FaDiceD6
   },
-  CRIT_D: {
-    id: "CRIT_D",
+  [StatValue.CRIT_D]: {
+    id: StatValue.CRIT_D,
     name: "Crit Damage",
     desc: "Multiplier for critical hits (Decimal value).",
     icon: FaBurst,
   },
-
-  // Meta Stat (for display only, not used in calculations)
-  TotalLevels: {
-    id: "TotalLevels",
-    name: "Total Levels",
-    desc: "Sum of all Job levels.",
-    icon: GiStarFormation, // Tally5 -> GiStarFormation (as a replacement for a tally mark)
-  },
 };
 
 // --- JOBS ---
-export const JOB_DATA: Record<string, JobDefinition> = {
-  Warrior: {
-    id: "Warrior",
-    name: "Warrior",
-    description: "Focuses on brute strength and physical endurance.",
-    icon: GiCrossedSwords, // Swords -> GiCrossedSwords
-    statBonuses: [
-      { stat: "STR", value: 2.0 },
-      { stat: "TGH", value: 1.5 },
-      { stat: "CON", value: 1.0 },
-    ],
-  },
-  Mage: {
-    id: "Mage",
-    name: "Mage",
-    description: "Harnesses raw intellect for powerful magical output.",
-    icon: GiLightningSpanner, // Zap -> GiLightningSpanner
-    statBonuses: [
-      { stat: "INT", value: 2.0 },
-      { stat: "CONC", value: 1.5 },
-      { stat: "RES", value: 1.0 },
-    ],
-  },
-  Rogue: {
-    id: "Rogue",
-    name: "Rogue",
-    description: "Favors agility and dexterity for swift strikes.",
-    icon: FaFeatherAlt, // Feather -> FaFeatherAlt
-    statBonuses: [
-      { stat: "DEX", value: 2.0 },
-      { stat: "AGI", value: 1.5 },
-      { stat: "CRIT_D", value: 0.01 }, // +1% crit damage per level
-    ],
-  },
-};
+// Import all jobs from the organized job data structure
+import { ALL_JOBS } from "../data/jobs";
+
+export const JOB_DATA: Record<string, JobDefinition> = ALL_JOBS;
 
 // --- SKILLS ---
-export const SKILL_DATA: Record<string, SkillDefinition> = {
-  Focus: {
-    id: "Focus",
-    name: "Focus",
-    description: "Increases Job EXP gain globally.",
-    icon: FaBookOpen, // BookOpen -> FaBookOpen
-    effects: [{ type: "jobExp", value: 0.005 }], // +0.5% per level
-    unlockCondition: { stat: "INT", required: 15 },
-  },
-  Diligence: {
-    id: "Diligence",
-    name: "Diligence",
-    description: "Increases Skill EXP gain globally.",
-    icon: FaGears,
-    unlockCondition: { stat: "CON", required: 15 },
-    effects: [{ type: "skillExp", value: 0.005 }], // +0.5% per level
-  },
-};
+// Import all skills from the organized skills data structure
+import { ALL_SKILLS } from "../data/skills";
 
-// --- ABILITIES (UPDATED STRUCTURE) ---
-export const ABILITY_DATA: Record<string, AbilityDefinition> = {
-  // Physical Attack
-  QuickStrike: {
-    id: "QuickStrike",
-    name: "Quick Strike",
-    description: "A swift physical attack (1.5x STR).",
-    icon: GiCrossedSwords, // Swords -> GiCrossedSwords
-    cooldown: 5.0,
-    unlockCondition: { stat: "STR", required: 10 },
-    // Type fixed using the new enum
-    effects: [{ damageMultiplier: 1.5, damageType: DamageValue.Physical }],
-    damageMultiplier: 0,
-    statusEffect: undefined
-  },
-  // Magic Attack
-  Fireball: {
-    id: "Fireball",
-    name: "Fireball",
-    description: "Hurls a fiery projectile (2.0x INT).",
-    icon: GiLightningSpanner, // Zap -> GiLightningSpanner
-    cooldown: 8.0,
-    unlockCondition: { stat: "INT", required: 15 },
-    // Type fixed using the new enum
-    effects: [{ damageMultiplier: 2.0, damageType: DamageValue.Magic }],
-    damageMultiplier: 0,
-    statusEffect: undefined
-  },
-  // Physical Attack with Status
-  ShieldBash: {
-    id: "ShieldBash",
-    name: "Shield Bash",
-    description: "Physical bash (0.8x STR) that can Stun.",
-    icon: GiShieldImpact, // Shield -> GiShieldImpact
-    cooldown: 12.0,
-    unlockCondition: { stat: "TGH", required: 20 },
-    // Type fixed using the new enum
-    effects: [{
-      damageMultiplier: 0.8,
-      damageType: DamageValue.Physical,
-      statusEffect: {
-        id: "Stun" as StatusEffectId,
-        duration: 2.0,
-        concentration: 20,
-      },
-    }],
-    damageMultiplier: 0,
-    statusEffect: undefined
-  },
-};
+export const SKILL_DATA: Record<string, SkillDefinition> = ALL_SKILLS;
+
+// --- ABILITIES ---
+// Import all abilities from the organized abilities data structure
+import { ALL_ABILITIES } from "../data/abilities";
+
+export const ABILITY_DATA: Record<string, AbilityDefinition> = ALL_ABILITIES;
 
 // --- BOSSES (UPDATED STRUCTURE) ---
 export const BOSS_DATA: Record<string, BossDefinition> = {
@@ -245,7 +148,7 @@ export const BOSS_DATA: Record<string, BossDefinition> = {
         throw new Error("Function not implemented.");
       },
       unlockCondition: {
-        stat: "INT",
+        stat: StatValue.INT,
         required: 0
       },
       damageMultiplier: 0,
@@ -277,7 +180,7 @@ export const BOSS_DATA: Record<string, BossDefinition> = {
         throw new Error("Function not implemented.");
       },
       unlockCondition: {
-        stat: "INT",
+        stat: StatValue.INT,
         required: 0
       },
       damageMultiplier: 0,
@@ -301,7 +204,7 @@ export const BOSS_DATA: Record<string, BossDefinition> = {
         throw new Error("Function not implemented.");
       },
       unlockCondition: {
-        stat: "INT",
+        stat: StatValue.INT,
         required: 0
       },
       damageMultiplier: 0,

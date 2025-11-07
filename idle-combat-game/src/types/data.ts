@@ -14,6 +14,40 @@ export const DamageValue = {
 
 export type DamageType = typeof DamageValue[keyof typeof DamageValue];
 
+/**
+ * Defines the available job traits in the game.
+ * Traits are characteristics that define a job's playstyle or specialty.
+ */
+export const TraitValue = {
+  // Combat Styles
+  Physical: "Physical",       // Focuses on physical combat
+  Magical: "Magical",         // Focuses on magical combat
+  Ranged: "Ranged",          // Focuses on ranged attacks
+  Melee: "Melee",            // Focuses on melee combat
+  
+  // Specializations
+  Tank: "Tank",              // Defensive specialist
+  DPS: "DPS",                // Damage dealer
+  Support: "Support",        // Support/utility role
+  
+  // Playstyles
+  Aggressive: "Aggressive",  // High risk, high reward
+  Defensive: "Defensive",    // Low risk, defensive playstyle
+  Balanced: "Balanced",      // Balanced approach
+  Swift: "Swift",            // Speed-focused
+  
+  // Advanced Traits
+  Stealth: "Stealth",        // Stealth and evasion focused
+  Tactical: "Tactical",      // Strategic and intelligent
+  Berserker: "Berserker",    // Raw power and fury
+  Guardian: "Guardian",      // Protection and defense
+  Critical: "Critical",      // Critical strike focused
+  Opportunist: "Opportunist", // Exploits weaknesses
+  Skirmish: "Skirmish",      // Mobile hit-and-run
+} as const;
+
+export type TraitType = typeof TraitValue[keyof typeof TraitValue];
+
 // --- Damage and Status Effect Types (NEW) ---
 export type StatusEffectId = "Poison" | "Stun" | "Weakness";
 
@@ -44,7 +78,12 @@ export interface JobDefinition {
   name: string;
   description: string;
   icon: IconType;
+  traits: TraitType[]; // One or more traits defining the job's characteristics
   statBonuses: { stat: StatId; value: number }[];
+  unlockConditions?: Array<
+    | { type: "jobLevel"; jobId: string; level: number }
+    | { type: "stat"; stat: StatId; value: number }
+  >;
 }
 
 export interface SkillDefinition {
@@ -52,8 +91,15 @@ export interface SkillDefinition {
   name: string;
   description: string;
   icon: IconType;
-  effects: { type: "jobExp" | "skillExp"; value: number }[]; // Global multiplier effect per level
-  unlockCondition: { stat: StatId; required: number };
+  effects: Array<
+    | { type: "jobExp"; value: number } // Global job EXP bonus
+    | { type: "skillExp"; value: number } // Global skill EXP bonus
+    | { type: "traitJobExp"; trait: TraitType; value: number } // Trait-specific job EXP bonus
+  >;
+  unlockConditions?: Array<
+    | { type: "stat"; stat: StatId; value: number }
+    | { type: "skillTotalLevels"; value: number }
+  >;
 }
 
 export interface AbilityDefinition {

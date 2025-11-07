@@ -2,6 +2,7 @@
 
 import React from "react";
 import type { PlayerStats } from "../types/game";
+import { StatValue } from "../types/game";
 import { STAT_MAP } from "../core/data";
 
 interface StatsTabProps {
@@ -10,17 +11,17 @@ interface StatsTabProps {
 }
 
 const STAT_ORDER = [
-  "STR",
-  "DEX",
-  "AGI",
-  "TGH",
-  "CON",
-  "INT",
-  "FRT",
-  "CONC",
-  "RES",
-  "CRIT_C",
-  "CRIT_D",
+  StatValue.STR,
+  StatValue.DEX,
+  StatValue.AGI,
+  StatValue.TGH,
+  StatValue.CON,
+  StatValue.INT,
+  StatValue.FRT,
+  StatValue.CONC,
+  StatValue.RES,
+  StatValue.CRIT_C,
+  StatValue.CRIT_D,
 ] as const;
 
 const StatsTab: React.FC<StatsTabProps> = ({ playerStats, totalLevels }) => {
@@ -52,9 +53,9 @@ const StatsTab: React.FC<StatsTabProps> = ({ playerStats, totalLevels }) => {
         {STAT_ORDER.map((statId) => {
           const statDef = STAT_MAP[statId];
           const value = playerStats[statId] || 0;
-          const displayValue = statId === "CRIT_C"
+          const displayValue = statId === StatValue.CRIT_C
             ? `${(value * 100).toFixed(1)}%`
-            : statId === "CRIT_D"
+            : statId === StatValue.CRIT_D
             ? `${(value * 100).toFixed(0)}%`
             : Math.floor(value).toString();
 

@@ -9,7 +9,7 @@ export const INITIAL_MAX_ACTIVE_SKILLS = 1;
 export const INITIAL_MAX_ACTIVE_ABILITIES = 1;
 
 export const EXP_BASE = 100;
-export const EXP_GROWTH_RATE = 1.2;
+export const EXP_GROWTH_RATE = 1.35; // 35% growth per level - sharper scaling for upgrades
 export const INITIAL_ABILITY_LEVEL = 1;
 export const ABILITY_LEVEL_REDUCTION = 0.005;
 export const MAX_ABILITY_LEVEL = 100;

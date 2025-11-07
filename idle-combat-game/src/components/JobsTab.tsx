@@ -1,25 +1,43 @@
-// src/components/JobsTab.tsx - REF ACTORED
+// src/components/JobsTab.tsx - REFACTORED
 
 import React from "react";
-import type { GameState } from "../types/game";
-import { JOB_DATA } from "../core/data";
-import { calculateLevelFromExp } from "../core/utils";
+import type { GameState, PlayerStats } from "../types/game";
+import { JOB_DATA, STAT_MAP } from "../core/data";
+import { calculateLevelFromExp, isJobUnlocked, isJobAvailable } from "../core/utils";
 import type { JobDefinition } from "../types/data";
 
 // Define the required props for the JobsTab component
 interface JobsTabProps {
   jobs: GameState["jobs"];
+  gameState: GameState;
+  playerStats: PlayerStats;
   maxActiveJobs: number;
   toggleJobActive: (jobId: string) => void;
 }
 
 const JobsTab: React.FC<JobsTabProps> = ({
   jobs,
+  gameState,
+  playerStats,
   maxActiveJobs,
   toggleJobActive,
 }) => {
-  // Retrieve all job IDs in a defined order (e.g., the order in JOB_DATA)
-  const jobIds = Object.keys(JOB_DATA);
+  // Retrieve all job IDs and filter by availability
+  const allJobIds = Object.keys(JOB_DATA);
+  const availableJobIds = allJobIds.filter((jobId) => 
+    isJobAvailable(jobId, gameState)
+  );
+  
+  // Get upcoming milestones (main path unlocks only)
+  const mainPathUnlocks = [
+    { jobId: "Guardian", requirement: "Warrior Level 10" },
+    { jobId: "Wizard", requirement: "Mage Level 10" },
+    { jobId: "Shadow", requirement: "Rogue Level 10" },
+  ];
+  
+  const upcomingMilestones = mainPathUnlocks
+    .filter(unlock => !isJobAvailable(unlock.jobId, gameState))
+    .slice(0, 3);
 
   return (
     <div className="space-y-8 animate-fade-in">
@@ -42,13 +60,13 @@ const JobsTab: React.FC<JobsTabProps> = ({
         </p>
       </div>
 
+      {/* Available Jobs */}
       <div className="grid gap-5 sm:gap-6 md:grid-cols-1 lg:grid-cols-2">
-        {jobIds.map((jobId) => {
+        {availableJobIds.map((jobId) => {
           const job = jobs[jobId];
           const data = JOB_DATA[jobId] as JobDefinition;
 
           const { level, currentLevelExp, expNeeded } = calculateLevelFromExp(job.exp);
-          const isUnlocked = level > 0;
           const progressPercent = (currentLevelExp / expNeeded) * 100;
 
           return (
@@ -58,7 +76,7 @@ const JobsTab: React.FC<JobsTabProps> = ({
                 job.isActive
                   ? "border-teal-500/60 bg-gradient-to-br from-teal-500/20 via-teal-500/10 to-transparent shadow-[0_35px_70px_-40px_rgba(42,157,143,0.55)]"
                   : "border-slate-700/50 bg-slate-800/50 hover:border-slate-600/50 hover:bg-slate-800/70"
-              } ${!isUnlocked ? "opacity-60" : ""}`}
+              }`}
             >
               <div className="pointer-events-none absolute -right-14 -top-14 h-32 w-32 rounded-full bg-teal-500/15 blur-2xl transition-transform duration-500 group-hover:scale-125" />
               {/* Active indicator */}
@@ -94,6 +112,51 @@ const JobsTab: React.FC<JobsTabProps> = ({
                   <p className="text-sm leading-relaxed text-slate-400">
                     {data.description}
                   </p>
+
+                  {/* Traits */}
+                  {data.traits && data.traits.length > 0 && (
+                    <div className="flex flex-wrap gap-2 mt-3">
+                      {data.traits.map((trait) => (
+                        <span
+                          key={trait}
+                          className={`rounded-full px-2.5 py-1 text-xs font-medium border transition-colors ${
+                            job.isActive
+                              ? "border-teal-400/40 bg-teal-500/20 text-teal-300"
+                              : "border-slate-600/50 bg-slate-700/40 text-slate-400"
+                          }`}
+                        >
+                          {trait}
+                        </span>
+                      ))}
+                    </div>
+                  )}
+
+                  {/* Unlock Requirements (for advanced jobs) */}
+                  {data.unlockConditions && data.unlockConditions.length > 0 && (
+                    <div className="mt-3 pt-3 border-t border-slate-700/30">
+                      <p className="text-xs text-slate-500 mb-2">Required to unlock:</p>
+                      <div className="flex flex-wrap gap-2">
+                        {data.unlockConditions.map((condition, idx) => {
+                          let requirementText = "";
+                          if (condition.type === "jobLevel") {
+                            const jobName = JOB_DATA[condition.jobId]?.name || condition.jobId;
+                            requirementText = `${jobName} Lv${condition.level}`;
+                          } else if (condition.type === "stat") {
+                            const statName = STAT_MAP[condition.stat]?.name || condition.stat;
+                            requirementText = `${statName} ${condition.value}`;
+                          }
+                          return (
+                            <span
+                              key={idx}
+                              className="text-xs px-2 py-1 rounded bg-slate-700/30 text-slate-400 border border-slate-600/30"
+                            >
+                              {requirementText}
+                            </span>
+                          );
+                        })}
+                      </div>
+                    </div>
+                  )}
                 </div>
               </div>
 
@@ -118,11 +181,8 @@ const JobsTab: React.FC<JobsTabProps> = ({
               {/* Action Button */}
               <button
                 onClick={() => toggleJobActive(jobId)}
-                disabled={!isUnlocked}
                 className={`relative z-10 mt-5 w-full rounded-xl px-4 py-2.5 text-sm font-semibold transition-all duration-200 ${
-                  !isUnlocked
-                    ? "cursor-not-allowed border border-charcoal-200/30 bg-charcoal-200/20 text-charcoal-700/40"
-                    : job.isActive
+                  job.isActive
                     ? "bg-gradient-to-r from-rose-400 to-rose-600 text-white shadow-[0_18px_35px_-20px_rgba(231,111,81,0.55)] hover:brightness-110"
                     : "bg-gradient-to-r from-teal-500 to-teal-600 text-white shadow-[0_18px_35px_-20px_rgba(42,157,143,0.55)] hover:brightness-110"
                 }`}
@@ -133,6 +193,32 @@ const JobsTab: React.FC<JobsTabProps> = ({
           );
         })}
       </div>
+
+      {/* Upcoming Milestones - Small hint bar */}
+      {upcomingMilestones.length > 0 && (
+        <div className="mt-8 rounded-xl border border-amber-500/20 bg-slate-800/30 backdrop-blur-sm p-4">
+          <div className="flex items-center gap-3 mb-3">
+            <span className="text-amber-400 text-lg">⭐</span>
+            <h3 className="text-sm font-semibold text-amber-400 uppercase tracking-wide">
+              Upcoming Milestones
+            </h3>
+          </div>
+          <div className="flex flex-wrap gap-2">
+            {upcomingMilestones.map((milestone, idx) => (
+              <div
+                key={idx}
+                className="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-slate-700/50 border border-slate-600/50 text-xs text-slate-300"
+              >
+                <span className="text-slate-500">🔒</span>
+                <span>{milestone.requirement}</span>
+              </div>
+            ))}
+          </div>
+          <p className="text-xs text-slate-500 mt-3">
+            Something special awaits at these milestones...
+          </p>
+        </div>
+      )}
     </div>
   );
 };

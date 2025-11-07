@@ -10,20 +10,28 @@ export const loadGame = (): GameState => {
     if (savedState) {
       const parsedState = JSON.parse(savedState);
       const initialState = getInitialState(); // Type-safe merging and migration
+      
+      // Merge saved jobs with initial jobs
+      const mergedJobs = { ...initialState.jobs };
+      if (parsedState.jobs) {
+        Object.entries(parsedState.jobs).forEach(([id, job]) => {
+          mergedJobs[id] = job as GameState["jobs"][string];
+        });
+      }
+      
+      // Merge saved skills with initial skills
+      const mergedSkills = { ...initialState.skills };
+      if (parsedState.skills) {
+        Object.entries(parsedState.skills).forEach(([id, skill]) => {
+          mergedSkills[id] = skill as GameState["skills"][string];
+        });
+      }
+      
       return {
         ...initialState,
         ...parsedState,
-        jobs: { ...initialState.jobs, ...parsedState.jobs }, // Use type assertions and optional chaining for merging complex objects
-        skills: Object.keys(initialState.skills).reduce((acc, id) => {
-          acc[id] = {
-            ...initialState.skills[id],
-            ...parsedState.skills?.[id],
-            isActive:
-              parsedState.skills?.[id]?.isActive ??
-              initialState.skills[id].isActive,
-          };
-          return acc;
-        }, {} as GameState["skills"]),
+        jobs: mergedJobs,
+        skills: mergedSkills,
         abilities: Object.keys(initialState.abilities).reduce((acc, id) => {
           acc[id] = {
             ...initialState.abilities[id],

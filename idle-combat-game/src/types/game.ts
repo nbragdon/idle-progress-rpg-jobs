@@ -41,19 +41,21 @@ export interface AbilityState {
   isTraining: boolean;
 }
 
-export type StatId =
-  | "STR"
-  | "DEX"
-  | "AGI"
-  | "TGH"
-  | "CON"
-  | "INT"
-  | "FRT"
-  | "CONC"
-  | "RES"
-  | "CRIT_C"
-  | "CRIT_D"
-  | "TotalLevels";
+export const StatValue = {
+  STR: "STR",           // Strength
+  DEX: "DEX",           // Dexterity
+  AGI: "AGI",           // Agility
+  TGH: "TGH",           // Toughness
+  CON: "CON",           // Constitution
+  INT: "INT",           // Intelligence
+  FRT: "FRT",           // Fortitude
+  CONC: "CONC",         // Concentration
+  RES: "RES",           // Resistance
+  CRIT_C: "CRIT_C",     // Critical Chance
+  CRIT_D: "CRIT_D",     // Critical Damage
+} as const;
+
+export type StatId = typeof StatValue[keyof typeof StatValue];
 export type PlayerStats = Record<StatId, number>;
 
 // --- Battle Types ---

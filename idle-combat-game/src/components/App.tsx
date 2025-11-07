@@ -1,7 +1,7 @@
 // src/components/App.tsx
 
 import React from "react";
-import { useGameState } from "../hooks/useGameState";
+import { useGame } from "../hooks/useGame";
 
 // Import all required components
 import JobsTab from "./JobsTab";
@@ -10,6 +10,7 @@ import SkillsTab from "./SkillsTab";
 import AbilitiesTab from "./AbilitiesTab";
 import BossTab from "./BossTab";
 import AscensionTab from "./AscensionTab";
+import SettingsTab from "./SettingsTab";
 
 // --- Helper Component (Alert Toast) ---
 interface AlertToastProps {
@@ -37,26 +38,23 @@ const AlertToast: React.FC<AlertToastProps> = ({ message, visible }) => (
 const App: React.FC = () => {
   const {
     gameState,
-    alert,
-    maxLimits,
-    // ADDED: Variables missing from the original useGameState export
-    activeTab,
-    setTab,
     playerStats,
+    totalLevels,
+    maxLimits,
     currentBossData,
     isAscensionVisible,
+    activeTab,
+    setTab,
+    alert,
     tabs,
-    startBossBattle,
-
-    // All Mutators (Functions to change state)
     toggleJobActive,
     toggleSkillActive,
     toggleAbilityTraining,
     buyAscensionUpgrade,
     ascend,
-  } = useGameState();
-
-  // The activeTab constant is now retrieved directly from the hook.
+    startBossBattle,
+    resetGame,
+  } = useGame();
 
   // Modern tab styling
   const baseTabClass =
@@ -88,7 +86,7 @@ const App: React.FC = () => {
                   Idle Loop <span className="text-teal-400">'The Grinder'</span>
                 </h1>
                 <p className="text-sm text-slate-400 mt-1">
-                  Level {playerStats.TotalLevels} | Active Jobs: {Object.values(gameState.jobs).filter((j) => j.isActive).length} | Skills: {Object.values(gameState.skills).filter((s) => s.isActive).length}
+                  Level {totalLevels} | Active Jobs: {Object.values(gameState.jobs).filter((j) => j.isActive).length} | Skills: {Object.values(gameState.skills).filter((s) => s.isActive).length}
                 </p>
               </div>
             </div>
@@ -152,6 +150,8 @@ const App: React.FC = () => {
             {activeTab === "Jobs" && (
               <JobsTab
                 jobs={gameState.jobs}
+                gameState={gameState}
+                playerStats={playerStats}
                 maxActiveJobs={maxLimits.maxActiveJobs}
                 toggleJobActive={toggleJobActive}
               />
@@ -159,12 +159,13 @@ const App: React.FC = () => {
             {activeTab === "Stats" && (
               <StatsTab
                 playerStats={playerStats}
-                totalLevels={playerStats.TotalLevels as number}
+                totalLevels={totalLevels}
               />
             )}
             {activeTab === "Skills" && (
               <SkillsTab
                 skills={gameState.skills}
+                gameState={gameState}
                 maxActiveSkills={maxLimits.maxActiveSkills}
                 toggleSkillActive={toggleSkillActive}
               />
@@ -189,6 +190,11 @@ const App: React.FC = () => {
                 gameState={gameState}
                 buyAscensionUpgrade={buyAscensionUpgrade}
                 ascend={ascend}
+              />
+            )}
+            {activeTab === "Settings" && (
+              <SettingsTab
+                onReset={resetGame}
               />
             )}
           </div>

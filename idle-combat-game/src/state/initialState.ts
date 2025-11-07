@@ -25,31 +25,33 @@ export const getInitialState = (): GameState => {
   const now = Date.now();
 
   // --- Initialize Jobs ---
-  const initialJobs = Object.keys(JOB_DATA).reduce<Record<string, JobState>>(
-    (acc, id) => {
-      // Warrior starts with 100 EXP (level 1), all others start at 0
-      acc[id] = {
+  // Only initialize basic jobs (jobs without unlock conditions)
+  const initialJobs: Record<string, JobState> = {};
+  
+  Object.entries(JOB_DATA).forEach(([id, jobDef]) => {
+    // Only add jobs that have no unlock conditions (basic jobs)
+    if (!jobDef.unlockConditions || jobDef.unlockConditions.length === 0) {
+      initialJobs[id] = {
         id: id,
-        exp: id === "Warrior" ? 100 : 0,
+        exp: id === "Warrior" ? 100 : 0, // Warrior starts with 100 EXP (level 1)
         isActive: id === "Warrior",
         lastActiveTime: now,
       };
-      return acc;
-    },
-    {}
-  );
+    }
+  });
 
   // --- Initialize Skills ---
-  const initialSkills = Object.keys(SKILL_DATA).reduce<
-    Record<string, SkillState>
-  >((acc, id) => {
-    acc[id] = {
-      id: id,
-      exp: id === "Focus" ? 100 : 0, // Focus starts with 100 EXP (level 1)
-      isActive: id === "Focus"
-    };
-    return acc;
-  }, {});
+  // Only initialize skills without unlock conditions
+  const initialSkills: Record<string, SkillState> = {};
+  Object.entries(SKILL_DATA).forEach(([id, skillDef]) => {
+    if (!skillDef.unlockConditions || skillDef.unlockConditions.length === 0) {
+      initialSkills[id] = {
+        id: id,
+        exp: 100, // Starting skills start with 100 EXP (level 1)
+        isActive: id === "PhysicalTraining" // Physical Training starts active
+      };
+    }
+  });
 
   // --- Initialize Abilities ---
   const initialAbilities = Object.keys(ABILITY_DATA).reduce<
