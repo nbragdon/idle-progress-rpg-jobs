@@ -1,8 +1,8 @@
 // src/hooks/useGameState.ts
 
-import { useState, useCallback, useMemo } from "react";
+import { useState, useCallback, useMemo, useEffect, useRef } from "react";
 import { getInitialState } from "../state/initialState";
-import { ASCENSION_UPGRADES, BOSS_DATA } from "../core/data";
+import { ASCENSION_UPGRADES, BOSS_DATA, JOB_DATA } from "../core/data";
 import type { GameState, PlayerStats } from "../types/game";
 import {
   getMaxActiveJobs,
@@ -10,9 +10,39 @@ import {
   getMaxActiveAbilities,
 } from "../core/gameCalculations";
 import type { AscensionUpgradeId, BossDefinition } from "../types/data";
+import { calculateLevelFromExp } from "../core/utils";
 // NEW IMPORTS for Tab definitions
 import { FaBriefcase, FaChartBar, FaGraduationCap, FaFistRaised, FaSkull, FaRedoAlt } from "react-icons/fa";
 import React from "react"; // Required for React.ElementType
+
+// LocalStorage key
+const STORAGE_KEY = "idle-rpg-save";
+
+// Load game state from localStorage
+const loadGameState = (): GameState | null => {
+  try {
+    const saved = localStorage.getItem(STORAGE_KEY);
+    if (saved) {
+      const parsed = JSON.parse(saved);
+      // Validate that it has the expected structure
+      if (parsed && typeof parsed === "object" && parsed.jobs && parsed.skills) {
+        return parsed as GameState;
+      }
+    }
+  } catch (error) {
+    console.error("Failed to load game state:", error);
+  }
+  return null;
+};
+
+// Save game state to localStorage
+const saveGameState = (state: GameState): void => {
+  try {
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+  } catch (error) {
+    console.error("Failed to save game state:", error);
+  }
+};
 
 // Mock Types used in App.tsx (assuming they are defined elsewhere)
 type TabId = "Jobs" | "Stats" | "Skills" | "Abilities" | "Boss" | "Ascension";
@@ -35,7 +65,12 @@ interface MaxLimits {
 }
 
 export const useGameState = () => {
-  const [state, setGameState] = useState<GameState>(getInitialState());
+  // Initialize state from localStorage or use initial state
+  const [state, setGameState] = useState<GameState>(() => {
+    const loaded = loadGameState();
+    return loaded || getInitialState();
+  });
+  
   const [alert, setAlert] = useState<AlertState>({
     message: "",
     visible: false,
@@ -44,6 +79,104 @@ export const useGameState = () => {
   // NEW STATE: Active Tab management
   const [activeTab, setActiveTab] = useState<TabId>("Jobs");
   const setTab = useCallback((tabId: TabId) => setActiveTab(tabId), []);
+
+  // Save to localStorage whenever state changes
+  const saveTimeoutRef = useRef<number | null>(null);
+  useEffect(() => {
+    // Debounce saves to avoid excessive writes
+    if (saveTimeoutRef.current) {
+      clearTimeout(saveTimeoutRef.current);
+    }
+    saveTimeoutRef.current = window.setTimeout(() => {
+      saveGameState(state);
+    }, 500); // Save 500ms after last state change
+
+    return () => {
+      if (saveTimeoutRef.current) {
+        clearTimeout(saveTimeoutRef.current);
+      }
+    };
+  }, [state]);
+
+  // Game Loop: Grant EXP to active jobs and skills
+  useEffect(() => {
+    const TICK_INTERVAL = 100; // Update every 100ms for smooth progress
+    const EXP_PER_SECOND = 1; // Base EXP per second for jobs
+    const SKILL_EXP_PER_SECOND = 0.5; // Base EXP per second for skills
+
+    const gameLoop = setInterval(() => {
+      setGameState((prev) => {
+        const now = Date.now();
+        const deltaTime = (now - prev.lastTickTime) / 1000; // Convert to seconds
+        
+        // Don't update if delta is too large (e.g., tab was inactive)
+        if (deltaTime > 10) {
+          return { ...prev, lastTickTime: now };
+        }
+
+        let newState = { ...prev, lastTickTime: now };
+        let hasChanges = false;
+
+        // Grant EXP to active jobs
+        const updatedJobs = { ...newState.jobs };
+        Object.keys(updatedJobs).forEach((jobId) => {
+          const job = updatedJobs[jobId];
+          if (job.isActive && job.exp > 0) {
+            const expGain = EXP_PER_SECOND * deltaTime;
+            const newExp = job.exp + expGain;
+
+            if (newExp !== job.exp) {
+              updatedJobs[jobId] = { ...job, exp: newExp };
+              hasChanges = true;
+            }
+          }
+        });
+
+        // Grant EXP to active skills
+        const updatedSkills = { ...newState.skills };
+        Object.keys(updatedSkills).forEach((skillId) => {
+          const skill = updatedSkills[skillId];
+          if (skill.isActive && skill.exp > 0) {
+            const expGain = SKILL_EXP_PER_SECOND * deltaTime;
+            const newExp = skill.exp + expGain;
+
+            if (newExp !== skill.exp) {
+              updatedSkills[skillId] = { ...skill, exp: newExp };
+              hasChanges = true;
+            }
+          }
+        });
+
+        // Grant EXP to training abilities
+        const updatedAbilities = { ...newState.abilities };
+        Object.keys(updatedAbilities).forEach((abilityId) => {
+          const ability = updatedAbilities[abilityId];
+          if (ability.isTraining && ability.unlocked) {
+            const expGain = SKILL_EXP_PER_SECOND * deltaTime;
+            const newExp = ability.exp + expGain;
+
+            if (newExp !== ability.exp) {
+              updatedAbilities[abilityId] = { ...ability, exp: newExp };
+              hasChanges = true;
+            }
+          }
+        });
+
+        if (hasChanges) {
+          return {
+            ...newState,
+            jobs: updatedJobs,
+            skills: updatedSkills,
+            abilities: updatedAbilities,
+          };
+        }
+
+        return newState;
+      });
+    }, TICK_INTERVAL);
+
+    return () => clearInterval(gameLoop);
+  }, []);
 
   // Helper function for showing alerts
   const showAlert = useCallback(
@@ -66,15 +199,39 @@ export const useGameState = () => {
   // --- DERIVED GAME STATE & LOGIC (Required by App.tsx) ---
 
   // MOCK: Derived State: Player Stats
-  // This would typically come from a useGameLogic hook, but mocked here for compilation
-  const playerStats: PlayerStats = useMemo(() => ({
-    // Mocking a calculation based on job levels
-    TotalLevels: Object.values(state.jobs).reduce((sum, j) => sum + j.level, 0) + 1,
-    Attack: 10 + Math.floor(Object.values(state.abilities).find(a => a.id === 'str')?.level || 1),
-    Defense: 5,
-    Health: 100,
-    Speed: 10,
-  }), [state.jobs, state.abilities]);
+  // Calculate player stats based on job levels
+  const playerStats: PlayerStats = useMemo(() => {
+    // Base stats
+    const stats: PlayerStats = {
+      TotalLevels: 0,
+      STR: 0,
+      DEX: 0,
+      AGI: 0,
+      TGH: 0,
+      CON: 0,
+      INT: 0,
+      FRT: 0,
+      CONC: 0,
+      RES: 0,
+      CRIT_C: 0,
+      CRIT_D: 1.5, // Base 150% crit damage
+    };
+
+    // Add stat bonuses from each job level
+    Object.entries(state.jobs).forEach(([jobId, job]) => {
+      const { level } = calculateLevelFromExp(job.exp);
+      stats.TotalLevels += level;
+
+      const jobData = JOB_DATA[jobId];
+      if (jobData && level > 0) {
+        jobData.statBonuses.forEach((bonus) => {
+          stats[bonus.stat] += bonus.value * level;
+        });
+      }
+    });
+
+    return stats;
+  }, [state.jobs]);
 
   // MOCK: Derived State: Current Boss Data
   const currentBossData: BossDefinition = useMemo(() => BOSS_DATA[state.currentBossId], [state.currentBossId]);

@@ -125,8 +125,9 @@ export const JOB_DATA: Record<string, JobDefinition> = {
     description: "Focuses on brute strength and physical endurance.",
     icon: GiCrossedSwords, // Swords -> GiCrossedSwords
     statBonuses: [
-      { stat: "STR", value: 1.5 },
-      { stat: "TGH", value: 0.5 },
+      { stat: "STR", value: 2.0 },
+      { stat: "TGH", value: 1.5 },
+      { stat: "CON", value: 1.0 },
     ],
   },
   Mage: {
@@ -135,18 +136,20 @@ export const JOB_DATA: Record<string, JobDefinition> = {
     description: "Harnesses raw intellect for powerful magical output.",
     icon: GiLightningSpanner, // Zap -> GiLightningSpanner
     statBonuses: [
-      { stat: "INT", value: 1.5 },
-      { stat: "FRT", value: 0.5 },
+      { stat: "INT", value: 2.0 },
+      { stat: "CONC", value: 1.5 },
+      { stat: "RES", value: 1.0 },
     ],
   },
-  Thief: {
-    id: "Thief",
-    name: "Thief",
+  Rogue: {
+    id: "Rogue",
+    name: "Rogue",
     description: "Favors agility and dexterity for swift strikes.",
     icon: FaFeatherAlt, // Feather -> FaFeatherAlt
     statBonuses: [
-      { stat: "DEX", value: 1.0 },
-      { stat: "AGI", value: 1.0 },
+      { stat: "DEX", value: 2.0 },
+      { stat: "AGI", value: 1.5 },
+      { stat: "CRIT_D", value: 0.01 }, // +1% crit damage per level
     ],
   },
 };
@@ -238,7 +241,7 @@ export const BOSS_DATA: Record<string, BossDefinition> = {
       effects: [{ damageMultiplier: 1.0, damageType: DamageValue.True }],
       id: "",
       description: "",
-      icon: function (props: IconBaseProps): React.ReactNode {
+      icon: function (_props: IconBaseProps): React.ReactNode {
         throw new Error("Function not implemented.");
       },
       unlockCondition: {
@@ -270,7 +273,7 @@ export const BOSS_DATA: Record<string, BossDefinition> = {
       }],
       id: "",
       description: "",
-      icon: function (props: IconBaseProps): React.ReactNode {
+      icon: function (_props: IconBaseProps): React.ReactNode {
         throw new Error("Function not implemented.");
       },
       unlockCondition: {
@@ -294,7 +297,7 @@ export const BOSS_DATA: Record<string, BossDefinition> = {
       effects: [{ damageMultiplier: 3.0, damageType: DamageValue.Magic }],
       id: "",
       description: "",
-      icon: function (props: IconBaseProps): React.ReactNode {
+      icon: function (_props: IconBaseProps): React.ReactNode {
         throw new Error("Function not implemented.");
       },
       unlockCondition: {

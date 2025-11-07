@@ -239,17 +239,20 @@ export const useGameLogic = () => {
     // 2. Apply Skill bonuses
     Object.values(gameState.skills).forEach((skill) => {
       const skillDef = SKILL_DATA[skill.id];
-      const level = skill.level;
-      skillDef.effects.forEach((effect) => {
+      // TODO: Apply skill bonuses
+      // const level = skill.level;
+      skillDef.effects.forEach(() => {
         //stats[effect.] += bonus.multiplier * level;
       });
     });
 
     // 3. Apply Permanent Upgrades
     Object.entries(gameState.permanentUpgrades).forEach(
-      ([upgradeId, level]) => {
-        const upgradeDef = ASCENSION_UPGRADES.find((u) => u.id === upgradeId);
-        // do a thing later
+      ([upgradeId]) => {
+        // TODO: Apply permanent upgrade effects
+        // const upgradeDef = ASCENSION_UPGRADES.find((u) => u.id === upgradeId);
+        // const level = gameState.permanentUpgrades[upgradeId];
+        void upgradeId; // Suppress unused warning
       }
     );
 

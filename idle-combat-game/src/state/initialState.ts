@@ -27,12 +27,12 @@ export const getInitialState = (): GameState => {
   // --- Initialize Jobs ---
   const initialJobs = Object.keys(JOB_DATA).reduce<Record<string, JobState>>(
     (acc, id) => {
+      // Warrior starts with 100 EXP (level 1), all others start at 0
       acc[id] = {
-        id: id, // FIX: Added missing 'id' field
-        level: id === "Warrior" ? 1 : 0,
-        exp: 0,
+        id: id,
+        exp: id === "Warrior" ? 100 : 0,
         isActive: id === "Warrior",
-        lastActiveTime: now, // FIX: Added missing 'lastActiveTime' field
+        lastActiveTime: now,
       };
       return acc;
     },
@@ -44,9 +44,8 @@ export const getInitialState = (): GameState => {
     Record<string, SkillState>
   >((acc, id) => {
     acc[id] = {
-      id: id, // FIX: Added missing 'id' field
-      level: 0,
-      exp: 0,
+      id: id,
+      exp: id === "Focus" ? 100 : 0, // Focus starts with 100 EXP (level 1)
       isActive: id === "Focus"
     };
     return acc;
@@ -58,11 +57,9 @@ export const getInitialState = (): GameState => {
   >((acc, id) => {
     const isInitialUnlock = ABILITY_DATA[id].unlockCondition.required === 0;
     acc[id] = {
-      id: id, // FIX: Added missing 'id' field
-      // FIX: Removed 'cooldown' property as it is not part of AbilityState
+      id: id,
       unlocked: isInitialUnlock,
-      level: isInitialUnlock ? INITIAL_ABILITY_LEVEL : 0,
-      exp: 0,
+      exp: isInitialUnlock ? INITIAL_ABILITY_LEVEL * 100 : 0, // Convert initial level to EXP
       isTraining: isInitialUnlock,
     };
     return acc;

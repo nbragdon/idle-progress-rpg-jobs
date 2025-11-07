@@ -10,10 +10,6 @@ import SkillsTab from "./SkillsTab";
 import AbilitiesTab from "./AbilitiesTab";
 import BossTab from "./BossTab";
 import AscensionTab from "./AscensionTab";
-import { FaBriefcase, FaChartBar, FaGraduationCap, FaFistRaised, FaSkull, FaRedoAlt } from "react-icons/fa"; // Added missing icon imports
-import { BsLayersFill } from "react-icons/bs";
-import { RiSwordFill } from "react-icons/ri";
-import { BiRefresh } from "react-icons/bi";
 
 // --- Helper Component (Alert Toast) ---
 interface AlertToastProps {
@@ -22,14 +18,17 @@ interface AlertToastProps {
 }
 
 const AlertToast: React.FC<AlertToastProps> = ({ message, visible }) => (
-  // Assuming the "z-50" class ensures the toast appears over other content
   <div
-    className={`fixed bottom-4 right-4 p-4 rounded-lg shadow-xl transition-opacity duration-300 z-50 ${visible
-      ? "opacity-100 bg-green-600"
-      : "opacity-0 pointer-events-none bg-green-600"
-      }`}
+    className={`fixed bottom-6 right-6 p-4 rounded-xl shadow-2xl border border-emerald-500/50 backdrop-blur-sm transition-all duration-300 z-50 transform ${
+      visible
+        ? "opacity-100 translate-y-0 bg-emerald-600"
+        : "opacity-0 translate-y-4 pointer-events-none bg-emerald-600"
+    }`}
   >
-    <p className="text-white font-semibold">{message}</p>
+    <p className="text-white font-semibold flex items-center gap-3">
+      <span className="text-xl">✓</span>
+      {message}
+    </p>
   </div>
 );
 
@@ -59,131 +58,144 @@ const App: React.FC = () => {
 
   // The activeTab constant is now retrieved directly from the hook.
 
-  // NOTE: Styling classes for tabs moved here for self-contained component
-  const baseTabClass = "flex items-center space-x-2 px-4 py-2 text-sm font-medium rounded-t-lg transition-colors duration-200";
+  // Modern tab styling
+  const baseTabClass =
+    "flex items-center justify-center gap-3 px-4 sm:px-5 py-2.5 sm:py-3 text-sm font-semibold rounded-lg transition-all duration-200 min-w-[48px] sm:min-w-0";
 
   const tabClasses = {
-    active: `${baseTabClass} bg-gray-600 text-white border-b-2 border-indigo-400`,
-    inactive: `${baseTabClass} text-gray-400 hover:bg-gray-700 hover:text-white`,
-    disabled: `${baseTabClass} text-gray-500 cursor-not-allowed bg-gray-800 opacity-50`,
+    active: `${baseTabClass} bg-gradient-to-r from-teal-600 to-teal-700 text-white shadow-lg border-b-2 border-teal-400`,
+    inactive: `${baseTabClass} text-slate-400 border-b-2 border-transparent hover:text-white hover:bg-slate-800/50`,
+    disabled: `${baseTabClass} text-slate-600 cursor-not-allowed border-b-2 border-transparent opacity-50`,
   };
 
 
   return (
-    <div className="min-h-screen bg-gray-900 text-white font-sans p-4 flex flex-col items-center">
-      <div className="w-full max-w-4xl bg-gray-800 rounded-xl shadow-2xl p-6">
-        <h1 className="text-3xl font-extrabold text-indigo-400 mb-6 text-center">
-          Idle Progression RPG (TS)
-        </h1>
-
-        {/* Character Sheet / Top Bar */}
-        <div className="mb-6 flex flex-wrap justify-between items-center p-4 bg-gray-700 rounded-lg shadow-inner text-sm">
-          {/* Active Jobs display */}
-          <p className="flex items-center text-gray-400">
-            <FaBriefcase className="w-4 h-4 mr-1 text-yellow-400" /> Jobs:{" "}
-            <span className="font-bold text-white ml-1">
-              {Object.values(gameState.jobs).filter((j) => j.isActive).length} /{" "}
-              {maxLimits.maxActiveJobs}
-            </span>
-          </p>
-          {/* Active Skills display */}
-          <p className="flex items-center text-gray-400">
-            <BsLayersFill className="w-4 h-4 mr-1 text-cyan-400" /> Skills:{" "}
-            <span className="font-bold text-white ml-1">
-              {Object.values(gameState.skills).filter((s) => s.isActive).length}{" "}
-              / {maxLimits.maxActiveSkills}
-            </span>
-          </p>
-          {/* Training Abilities display */}
-          <p className="flex items-center text-gray-400">
-            <RiSwordFill className="w-4 h-4 mr-1 text-pink-400" /> Training:{" "}
-            <span className="font-bold text-white ml-1">
-              {
-                Object.values(gameState.abilities).filter((a) => a.isTraining)
-                  .length
-              }{" "}
-              / {maxLimits.maxActiveAbilities}
-            </span>
-          </p>
-          {/* Ascension Points display */}
-          {isAscensionVisible && (
-            <p className="flex items-center text-gray-400">
-              <BiRefresh className="w-4 h-4 mr-1 text-yellow-400" /> AP:{" "}
-              <span className="font-bold text-white ml-1">
-                {gameState.ascensionPoints}
-              </span>
-            </p>
-          )}
-        </div>
-
-        {/* Tab Navigation (Using refactored classes) */}
-        <div className="flex border-b border-gray-700 -mb-px overflow-x-auto whitespace-nowrap">
-          {tabs.map((tab) => (
-            <button
-              key={tab.id}
-              onClick={() => !tab.disabled && setTab(tab.id)}
-              disabled={tab.disabled}
-              className={tab.disabled
-                ? tabClasses.disabled
-                : activeTab === tab.id
-                  ? tabClasses.active
-                  : tabClasses.inactive}
-            >
-              <tab.icon className="w-4 h-4" />
-              <span>{tab.name}</span>
-            </button>
-          ))}
-        </div>
-
-        {/* Tab Content Rendering */}
-        <div className="min-h-[400px] mt-4">
-          {activeTab === "Jobs" && (
-            <JobsTab
-              jobs={gameState.jobs}
-              maxActiveJobs={maxLimits.maxActiveJobs}
-              toggleJobActive={toggleJobActive}
-            />
-          )}
-          {activeTab === "Stats" && (
-            <StatsTab
-              playerStats={playerStats}
-              // Note: TotalLevels is guaranteed to be in playerStats by useGameLogic.ts
-              totalLevels={playerStats.TotalLevels as number}
-            />
-          )}
-          {activeTab === "Skills" && (
-            <SkillsTab
-              skills={gameState.skills}
-              maxActiveSkills={maxLimits.maxActiveSkills}
-              toggleSkillActive={toggleSkillActive}
-            />
-          )}
-          {activeTab === "Abilities" && (
-            <AbilitiesTab
-              abilities={gameState.abilities}
-              maxActiveAbilities={maxLimits.maxActiveAbilities}
-              playerStats={playerStats}
-              toggleAbilityTraining={toggleAbilityTraining}
-            />
-          )}
-          {activeTab === "Boss" && (
-            <BossTab
-              bossData={currentBossData}
-              bossProgress={gameState.bossProgress}
-              startBattle={startBossBattle}
-            />
-          )}
-          {activeTab === "Ascension" && (
-            <AscensionTab
-              gameState={gameState}
-              buyAscensionUpgrade={buyAscensionUpgrade}
-              ascend={ascend}
-            />
-          )}
-        </div>
-
-        <AlertToast message={alert.message} visible={alert.visible} />
+    <div className="relative min-h-screen overflow-hidden bg-gradient-to-br from-slate-950 via-slate-900 to-slate-800">
+      {/* Subtle background effects */}
+      <div className="pointer-events-none absolute inset-0">
+        <div className="absolute -top-32 -left-20 h-96 w-96 rounded-full bg-teal-500/10 blur-3xl" />
+        <div className="absolute bottom-[-14rem] right-[-10rem] h-[32rem] w-[32rem] rounded-full bg-amber-500/10 blur-3xl" />
       </div>
+
+      {/* Top Info Bar - Character/Game Info */}
+      <header className="relative border-b border-slate-700/50 bg-slate-900/80 backdrop-blur-md">
+        <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-6">
+          <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-6">
+            {/* Left: Character Info */}
+            <div className="flex items-center gap-4">
+              <div>
+                <h1 className="text-2xl sm:text-3xl font-bold text-white tracking-tight">
+                  Idle Loop <span className="text-teal-400">'The Grinder'</span>
+                </h1>
+                <p className="text-sm text-slate-400 mt-1">
+                  Level {playerStats.TotalLevels} | Active Jobs: {Object.values(gameState.jobs).filter((j) => j.isActive).length} | Skills: {Object.values(gameState.skills).filter((s) => s.isActive).length}
+                </p>
+              </div>
+            </div>
+
+            {/* Right: Key Stats */}
+            <div className="flex flex-wrap gap-4">
+              <div className="rounded-xl border border-teal-500/30 bg-slate-800/50 px-6 py-4 backdrop-blur-sm">
+                <p className="text-xs font-medium uppercase tracking-wide text-teal-400">Active Jobs</p>
+                <p className="text-2xl font-bold text-white mt-2">
+                  {Object.values(gameState.jobs).filter((j) => j.isActive).length}
+                  <span className="text-sm font-normal text-slate-400 ml-2">/ {maxLimits.maxActiveJobs}</span>
+                </p>
+              </div>
+              <div className="rounded-xl border border-amber-500/30 bg-slate-800/50 px-6 py-4 backdrop-blur-sm">
+                <p className="text-xs font-medium uppercase tracking-wide text-amber-400">Active Skills</p>
+                <p className="text-2xl font-bold text-white mt-2">
+                  {Object.values(gameState.skills).filter((s) => s.isActive).length}
+                  <span className="text-sm font-normal text-slate-400 ml-2">/ {maxLimits.maxActiveSkills}</span>
+                </p>
+              </div>
+              {isAscensionVisible && (
+                <div className="rounded-xl border border-rose-500/30 bg-slate-800/50 px-6 py-4 backdrop-blur-sm">
+                  <p className="text-xs font-medium uppercase tracking-wide text-rose-400">Ascension</p>
+                  <p className="text-2xl font-bold text-white mt-2">{gameState.ascensionPoints} AP</p>
+                </div>
+              )}
+            </div>
+          </div>
+        </div>
+      </header>
+
+      {/* Tab Navigation Bar */}
+      <nav className="relative border-b border-slate-700/50 bg-slate-900/60 backdrop-blur-sm">
+        <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+          <div className="flex gap-1 overflow-x-auto py-3">
+            {tabs.map((tab) => (
+              <button
+                key={tab.id}
+                onClick={() => !tab.disabled && setTab(tab.id)}
+                disabled={tab.disabled}
+                className={
+                  tab.disabled
+                    ? tabClasses.disabled
+                    : activeTab === tab.id
+                    ? tabClasses.active
+                    : tabClasses.inactive
+                }
+              >
+                <tab.icon className="h-4 w-4" />
+                <span className="hidden sm:inline-block">{tab.name}</span>
+              </button>
+            ))}
+          </div>
+        </div>
+      </nav>
+
+      {/* Main Content Area */}
+      <main className="relative mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-8">
+        <div className="rounded-2xl border border-slate-700/50 bg-slate-900/40 backdrop-blur-md shadow-2xl">
+          <div className="min-h-[600px] p-6 sm:p-8">
+            {activeTab === "Jobs" && (
+              <JobsTab
+                jobs={gameState.jobs}
+                maxActiveJobs={maxLimits.maxActiveJobs}
+                toggleJobActive={toggleJobActive}
+              />
+            )}
+            {activeTab === "Stats" && (
+              <StatsTab
+                playerStats={playerStats}
+                totalLevels={playerStats.TotalLevels as number}
+              />
+            )}
+            {activeTab === "Skills" && (
+              <SkillsTab
+                skills={gameState.skills}
+                maxActiveSkills={maxLimits.maxActiveSkills}
+                toggleSkillActive={toggleSkillActive}
+              />
+            )}
+            {activeTab === "Abilities" && (
+              <AbilitiesTab
+                abilities={gameState.abilities}
+                maxActiveAbilities={maxLimits.maxActiveAbilities}
+                playerStats={playerStats}
+                toggleAbilityTraining={toggleAbilityTraining}
+              />
+            )}
+            {activeTab === "Boss" && (
+              <BossTab
+                bossData={currentBossData}
+                bossProgress={gameState.bossProgress}
+                startBattle={startBossBattle}
+              />
+            )}
+            {activeTab === "Ascension" && (
+              <AscensionTab
+                gameState={gameState}
+                buyAscensionUpgrade={buyAscensionUpgrade}
+                ascend={ascend}
+              />
+            )}
+          </div>
+        </div>
+      </main>
+
+      <AlertToast message={alert.message} visible={alert.visible} />
     </div>
   );
 };

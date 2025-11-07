@@ -23,7 +23,6 @@ export interface AbilityEffect {
 
 export interface JobState {
   id: string;
-  level: number;
   exp: number;
   isActive: boolean;
   lastActiveTime: number; // Timestamp for tracking swaps
@@ -31,14 +30,12 @@ export interface JobState {
 
 export interface SkillState {
   id: string;
-  level: number;
   exp: number;
   isActive: boolean;
 }
 
 export interface AbilityState {
   id: string;
-  level: number;
   exp: number;
   unlocked: boolean;
   isTraining: boolean;
