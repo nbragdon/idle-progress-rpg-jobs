@@ -5,12 +5,14 @@ import { useGame } from "../hooks/useGame";
 
 // Import all required components
 import JobsTab from "./JobsTab";
-import StatsTab from "./StatsTab";
 import SkillsTab from "./SkillsTab";
 import AbilitiesTab from "./AbilitiesTab";
 import BossTab from "./BossTab";
+import BattleDisplay from "./BattleDisplay";
 import AscensionTab from "./AscensionTab";
 import SettingsTab from "./SettingsTab";
+import Modal from "./Modal";
+import { STAT_MAP } from "../core/data";
 
 // --- Helper Component (Alert Toast) ---
 interface AlertToastProps {
@@ -50,11 +52,15 @@ const App: React.FC = () => {
     toggleJobActive,
     toggleSkillActive,
     toggleAbilityTraining,
+    toggleAbilityBattle,
     buyAscensionUpgrade,
     ascend,
     startBossBattle,
+    closeBattle,
     resetGame,
   } = useGame();
+
+  const [showStatsModal, setShowStatsModal] = React.useState(false);
 
   // Modern tab styling
   const baseTabClass =
@@ -63,7 +69,6 @@ const App: React.FC = () => {
   const tabClasses = {
     active: `${baseTabClass} bg-gradient-to-r from-teal-600 to-teal-700 text-white shadow-lg border-b-2 border-teal-400`,
     inactive: `${baseTabClass} text-slate-400 border-b-2 border-transparent hover:text-white hover:bg-slate-800/50`,
-    disabled: `${baseTabClass} text-slate-600 cursor-not-allowed border-b-2 border-transparent opacity-50`,
   };
 
 
@@ -77,42 +82,88 @@ const App: React.FC = () => {
 
       {/* Top Info Bar - Character/Game Info */}
       <header className="relative border-b border-slate-700/50 bg-slate-900/80 backdrop-blur-md">
-        <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-6">
-          <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-6">
-            {/* Left: Character Info */}
-            <div className="flex items-center gap-4">
+        <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-5 sm:py-6">
+          <div className="flex flex-col gap-3">
+            {/* Top Row: Title and Ascension Points */}
+            <div className="flex items-center justify-between">
               <div>
                 <h1 className="text-2xl sm:text-3xl font-bold text-white tracking-tight">
-                  Idle Loop <span className="text-teal-400">'The Grinder'</span>
+                  <span className="text-teal-400">Strongest Hero</span>
                 </h1>
-                <p className="text-sm text-slate-400 mt-1">
-                  Level {totalLevels} | Active Jobs: {Object.values(gameState.jobs).filter((j) => j.isActive).length} | Skills: {Object.values(gameState.skills).filter((s) => s.isActive).length}
+                <p className="text-xs text-slate-400 mt-1">
+                  Level {totalLevels} | Active Jobs: {Object.values(gameState.jobs).filter((j) => j.isActive).length}/{maxLimits.maxActiveJobs} | Skills: {Object.values(gameState.skills).filter((s) => s.isActive).length}/{maxLimits.maxActiveSkills}
                 </p>
               </div>
-            </div>
-
-            {/* Right: Key Stats */}
-            <div className="flex flex-wrap gap-4">
-              <div className="rounded-xl border border-teal-500/30 bg-slate-800/50 px-6 py-4 backdrop-blur-sm">
-                <p className="text-xs font-medium uppercase tracking-wide text-teal-400">Active Jobs</p>
-                <p className="text-2xl font-bold text-white mt-2">
-                  {Object.values(gameState.jobs).filter((j) => j.isActive).length}
-                  <span className="text-sm font-normal text-slate-400 ml-2">/ {maxLimits.maxActiveJobs}</span>
-                </p>
-              </div>
-              <div className="rounded-xl border border-amber-500/30 bg-slate-800/50 px-6 py-4 backdrop-blur-sm">
-                <p className="text-xs font-medium uppercase tracking-wide text-amber-400">Active Skills</p>
-                <p className="text-2xl font-bold text-white mt-2">
-                  {Object.values(gameState.skills).filter((s) => s.isActive).length}
-                  <span className="text-sm font-normal text-slate-400 ml-2">/ {maxLimits.maxActiveSkills}</span>
-                </p>
-              </div>
+              
               {isAscensionVisible && (
-                <div className="rounded-xl border border-rose-500/30 bg-slate-800/50 px-6 py-4 backdrop-blur-sm">
-                  <p className="text-xs font-medium uppercase tracking-wide text-rose-400">Ascension</p>
-                  <p className="text-2xl font-bold text-white mt-2">{gameState.ascensionPoints} AP</p>
+                <div className="rounded-lg border border-rose-500/30 bg-slate-800/50 px-4 py-2 backdrop-blur-sm">
+                  <p className="text-[10px] font-medium uppercase tracking-wide text-rose-400">Ascension Points</p>
+                  <p className="text-lg font-bold text-white">
+                    {gameState.ascensionPoints} AP
+                    {gameState.potentialAscensionPoints > 0 && (
+                      <span className="text-xs font-normal text-teal-400 ml-1">
+                        (+{gameState.potentialAscensionPoints})
+                      </span>
+                    )}
+                  </p>
                 </div>
               )}
+            </div>
+
+            {/* Bottom Row: Stats */}
+            <div className="flex items-center gap-4 mt-2 mb-3">
+              <div className="flex flex-wrap items-center gap-x-4 gap-y-1 text-xs">
+                <div className="flex items-center gap-1">
+                  <span className="text-slate-500 font-medium">STR</span>
+                  <span className="text-slate-300 font-semibold">{playerStats.STR}</span>
+                </div>
+                <div className="flex items-center gap-1">
+                  <span className="text-slate-500 font-medium">DEX</span>
+                  <span className="text-slate-300 font-semibold">{playerStats.DEX}</span>
+                </div>
+                <div className="flex items-center gap-1">
+                  <span className="text-slate-500 font-medium">AGI</span>
+                  <span className="text-slate-300 font-semibold">{playerStats.AGI}</span>
+                </div>
+                <div className="flex items-center gap-1">
+                  <span className="text-slate-500 font-medium">TGH</span>
+                  <span className="text-slate-300 font-semibold">{playerStats.TGH}</span>
+                </div>
+                <div className="flex items-center gap-1">
+                  <span className="text-slate-500 font-medium">CON</span>
+                  <span className="text-slate-300 font-semibold">{playerStats.CON}</span>
+                </div>
+                <div className="flex items-center gap-1">
+                  <span className="text-slate-500 font-medium">INT</span>
+                  <span className="text-slate-300 font-semibold">{playerStats.INT}</span>
+                </div>
+                <div className="flex items-center gap-1">
+                  <span className="text-slate-500 font-medium">FRT</span>
+                  <span className="text-slate-300 font-semibold">{playerStats.FRT}</span>
+                </div>
+                <div className="flex items-center gap-1">
+                  <span className="text-slate-500 font-medium">CONC</span>
+                  <span className="text-slate-300 font-semibold">{playerStats.CONC}</span>
+                </div>
+                <div className="flex items-center gap-1">
+                  <span className="text-slate-500 font-medium">RES</span>
+                  <span className="text-slate-300 font-semibold">{playerStats.RES}</span>
+                </div>
+                <div className="flex items-center gap-1">
+                  <span className="text-slate-500 font-medium">CRIT</span>
+                  <span className="text-slate-300 font-semibold">{(playerStats.CRIT_C * 100).toFixed(1)}%</span>
+                </div>
+                <div className="flex items-center gap-1">
+                  <span className="text-slate-500 font-medium">CRIT DMG</span>
+                  <span className="text-slate-300 font-semibold">{(playerStats.CRIT_D * 100).toFixed(0)}%</span>
+                </div>
+              </div>
+              <button
+                onClick={() => setShowStatsModal(true)}
+                className="rounded-lg px-3 py-1.5 text-xs font-semibold bg-slate-700/50 hover:bg-slate-600/50 text-slate-300 hover:text-white transition-colors border border-slate-600/50 hover:border-slate-500/50"
+              >
+                Details
+              </button>
             </div>
           </div>
         </div>
@@ -121,16 +172,13 @@ const App: React.FC = () => {
       {/* Tab Navigation Bar */}
       <nav className="relative border-b border-slate-700/50 bg-slate-900/60 backdrop-blur-sm">
         <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-          <div className="flex gap-1 overflow-x-auto py-3">
+          <div className="flex gap-1 overflow-x-auto py-4 sm:py-5">
             {tabs.map((tab) => (
               <button
                 key={tab.id}
-                onClick={() => !tab.disabled && setTab(tab.id)}
-                disabled={tab.disabled}
+                onClick={() => setTab(tab.id)}
                 className={
-                  tab.disabled
-                    ? tabClasses.disabled
-                    : activeTab === tab.id
+                  activeTab === tab.id
                     ? tabClasses.active
                     : tabClasses.inactive
                 }
@@ -146,8 +194,14 @@ const App: React.FC = () => {
       {/* Main Content Area */}
       <main className="relative mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-8">
         <div className="rounded-2xl border border-slate-700/50 bg-slate-900/40 backdrop-blur-md shadow-2xl">
-          <div className="min-h-[600px] p-6 sm:p-8">
-            {activeTab === "Jobs" && (
+          <div className="min-h-[600px] p-7 sm:p-10">
+            {/* Show Battle Display if battle is active */}
+            {gameState.battleState ? (
+              <BattleDisplay
+                battleState={gameState.battleState}
+                closeBattle={closeBattle}
+              />
+            ) : activeTab === "Jobs" ? (
               <JobsTab
                 jobs={gameState.jobs}
                 gameState={gameState}
@@ -155,53 +209,105 @@ const App: React.FC = () => {
                 maxActiveJobs={maxLimits.maxActiveJobs}
                 toggleJobActive={toggleJobActive}
               />
-            )}
-            {activeTab === "Stats" && (
-              <StatsTab
-                playerStats={playerStats}
-                totalLevels={totalLevels}
-              />
-            )}
-            {activeTab === "Skills" && (
+            ) : activeTab === "Skills" ? (
               <SkillsTab
                 skills={gameState.skills}
                 gameState={gameState}
                 maxActiveSkills={maxLimits.maxActiveSkills}
                 toggleSkillActive={toggleSkillActive}
               />
-            )}
-            {activeTab === "Abilities" && (
+            ) : activeTab === "Abilities" ? (
               <AbilitiesTab
                 abilities={gameState.abilities}
                 maxActiveAbilities={maxLimits.maxActiveAbilities}
                 playerStats={playerStats}
+                gameState={gameState}
                 toggleAbilityTraining={toggleAbilityTraining}
+                toggleAbilityBattle={toggleAbilityBattle}
               />
-            )}
-            {activeTab === "Boss" && (
+            ) : activeTab === "Boss" ? (
               <BossTab
                 bossData={currentBossData}
                 bossProgress={gameState.bossProgress}
                 startBattle={startBossBattle}
               />
-            )}
-            {activeTab === "Ascension" && (
+            ) : activeTab === "Ascension" ? (
               <AscensionTab
                 gameState={gameState}
                 buyAscensionUpgrade={buyAscensionUpgrade}
                 ascend={ascend}
               />
-            )}
-            {activeTab === "Settings" && (
+            ) : activeTab === "Settings" ? (
               <SettingsTab
                 onReset={resetGame}
               />
-            )}
+            ) : null}
           </div>
         </div>
       </main>
 
       <AlertToast message={alert.message} visible={alert.visible} />
+
+      {/* Stats Details Modal */}
+      <Modal
+        isOpen={showStatsModal}
+        onClose={() => setShowStatsModal(false)}
+        title="Character Stats"
+      >
+        <div className="space-y-6">
+          {/* Stats Grid */}
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            {Object.entries(playerStats).map(([statId, value]) => {
+              const statInfo = STAT_MAP[statId as keyof typeof playerStats];
+              const StatIcon = statInfo.icon;
+              
+              // Format display value
+              let displayValue = value.toString();
+              if (statId === 'CRIT_C') {
+                displayValue = `${(value * 100).toFixed(1)}%`;
+              } else if (statId === 'CRIT_D') {
+                displayValue = `${(value * 100).toFixed(0)}%`;
+              }
+              
+              return (
+                <div
+                  key={statId}
+                  className="rounded-xl border border-slate-700/50 bg-slate-800/50 p-4"
+                >
+                  <div className="flex items-center gap-3 mb-2">
+                    <div className="rounded-lg p-2 bg-teal-500/20 text-teal-400">
+                      <StatIcon className="h-5 w-5" />
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <h4 className="text-sm font-semibold text-white">{statInfo.name}</h4>
+                      <p className="text-xs text-slate-500">{statId}</p>
+                    </div>
+                    <div className="text-2xl font-bold text-teal-400">
+                      {displayValue}
+                    </div>
+                  </div>
+                  <p className="text-xs text-slate-400 leading-relaxed">
+                    {statInfo.desc}
+                  </p>
+                </div>
+              );
+            })}
+          </div>
+
+          {/* Total Level Info */}
+          <div className="rounded-xl border border-teal-500/40 bg-teal-500/10 p-4">
+            <div className="flex items-center justify-between">
+              <div>
+                <h4 className="text-sm font-semibold text-teal-400">Total Level</h4>
+                <p className="text-xs text-slate-400 mt-1">Combined levels from all jobs</p>
+              </div>
+              <div className="text-3xl font-bold text-teal-400">
+                {totalLevels}
+              </div>
+            </div>
+          </div>
+        </div>
+      </Modal>
     </div>
   );
 };

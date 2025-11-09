@@ -24,18 +24,18 @@ const SettingsTab: React.FC<SettingsTabProps> = ({ onReset }) => {
 
   return (
     <div className="space-y-8 animate-fade-in">
-      <div className="flex items-center gap-4 mb-2">
+      <div className="flex items-center gap-4 mb-6">
         <div className="w-1.5 h-10 rounded-full bg-gradient-to-b from-slate-500 to-slate-600"></div>
         <div>
           <h2 className="text-2xl sm:text-3xl font-bold text-white">Settings</h2>
-          <p className="text-sm sm:text-base text-white/70 mt-1">
+          <p className="text-sm sm:text-base text-white/70 mt-2">
             Manage your game preferences
           </p>
         </div>
       </div>
 
       {/* Danger Zone */}
-      <div className="rounded-2xl border border-rose-500/30 bg-rose-500/5 p-6 sm:p-7">
+      <div className="rounded-2xl border border-rose-500/30 bg-rose-500/5 p-7 sm:p-8">
         <div className="flex items-center gap-3 mb-4">
           <span className="text-rose-400 text-2xl">⚠️</span>
           <h3 className="text-lg font-semibold text-rose-400 uppercase tracking-wide">

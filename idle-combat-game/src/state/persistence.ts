@@ -39,6 +39,9 @@ export const loadGame = (): GameState => {
             isTraining:
               parsedState.abilities?.[id]?.isTraining ??
               initialState.abilities[id].isTraining,
+            isActiveBattle:
+              parsedState.abilities?.[id]?.isActiveBattle ??
+              initialState.abilities[id].isActiveBattle,
           };
           return acc;
         }, {} as GameState["abilities"]),
@@ -50,6 +53,9 @@ export const loadGame = (): GameState => {
           ...initialState.bossProgress,
           ...parsedState.bossProgress,
         },
+        potentialAscensionPoints: parsedState.potentialAscensionPoints ?? 0,
+        ascensionUnlocked: parsedState.ascensionUnlocked ?? false, // Persist through loads
+        battleState: null, // Never persist battle state
       } as GameState;
     }
   } catch (error) {

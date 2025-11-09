@@ -62,7 +62,8 @@ export const getInitialState = (): GameState => {
       id: id,
       unlocked: isInitialUnlock,
       exp: isInitialUnlock ? INITIAL_ABILITY_LEVEL * 100 : 0, // Convert initial level to EXP
-      isTraining: isInitialUnlock,
+      isTraining: id === "Smash", // Only Smash starts training (matches starter Warrior job)
+      isActiveBattle: false, // Player must manually select abilities for battle
     };
     return acc;
   }, {});
@@ -79,10 +80,12 @@ export const getInitialState = (): GameState => {
 
     // Currencies and Permanent Systems
     ascensionPoints: 0,
+    potentialAscensionPoints: 0,
     permanentUpgrades: ASCENSION_UPGRADES.reduce((acc, up) => {
       acc[up.id] = 0;
       return acc;
     }, {} as Record<AscensionUpgradeDefinition["id"], number>), // FIX: Used correct type for permanentUpgrades accumulator
+    ascensionUnlocked: false, // Unlocked after first boss defeat
 
     // Boss Data
     currentBossId: FIRST_BOSS_ID, // FIX: Corrected to use "TrainingDummy"
@@ -92,6 +95,9 @@ export const getInitialState = (): GameState => {
 
     // UI State
     activeTab: "Jobs",
+    
+    // Battle State
+    battleState: null,
 
     // Removed extraneous properties: version, lastSave, maxActiveJobs, maxActiveSkills, maxActiveAbilities
   };

@@ -30,20 +30,45 @@ export const useGameEngine = () => {
     return unsubscribe;
   }, [engine]);
 
-  // Auto-save game state
+  // Auto-save game state - save every time state changes with minimal debounce
   const saveTimeoutRef = useRef<number | null>(null);
+  const lastSaveRef = useRef<number>(0);
+  
   useEffect(() => {
+    const now = Date.now();
+    const timeSinceLastSave = now - lastSaveRef.current;
+    
+    // Clear any pending timeout
     if (saveTimeoutRef.current) {
       clearTimeout(saveTimeoutRef.current);
     }
+    
+    // If it's been more than 1 second since last save, save immediately
+    // Otherwise, debounce for 100ms (one tick) to batch rapid changes
+    const delay = timeSinceLastSave > 1000 ? 0 : 100;
+    
     saveTimeoutRef.current = window.setTimeout(() => {
       saveGame(gameState);
-    }, 500);
+      lastSaveRef.current = Date.now();
+    }, delay);
 
     return () => {
       if (saveTimeoutRef.current) {
         clearTimeout(saveTimeoutRef.current);
       }
+    };
+  }, [gameState]);
+
+  // Save on page unload as a backup
+  useEffect(() => {
+    const handleBeforeUnload = () => {
+      saveGame(gameState);
+    };
+    
+    window.addEventListener('beforeunload', handleBeforeUnload);
+    
+    return () => {
+      window.removeEventListener('beforeunload', handleBeforeUnload);
     };
   }, [gameState]);
 
@@ -99,16 +124,24 @@ export const useGameEngine = () => {
     return engine.toggleAbilityTraining(abilityId, maxTrainingAbilities);
   }, [engine]);
 
+  const toggleAbilityBattle = useCallback((abilityId: string, maxBattleAbilities: number) => {
+    return engine.toggleAbilityBattle(abilityId, maxBattleAbilities);
+  }, [engine]);
+
   const buyAscensionUpgrade = useCallback((upgradeId: string, cost: number) => {
     return engine.buyAscensionUpgrade(upgradeId, cost);
   }, [engine]);
 
-  const ascend = useCallback((points: number) => {
-    engine.ascend(points);
+  const ascend = useCallback(() => {
+    engine.ascend();
   }, [engine]);
 
   const startBossBattle = useCallback(() => {
-    engine.startBossBattle();
+    return engine.startBossBattle();
+  }, [engine]);
+
+  const closeBattle = useCallback(() => {
+    engine.closeBattle();
   }, [engine]);
 
   const calculatePlayerStats = useCallback(() => {
@@ -116,8 +149,8 @@ export const useGameEngine = () => {
   }, [engine]);
 
   const resetGame = useCallback(() => {
-    // Clear localStorage
-    localStorage.removeItem("idle-rpg-save");
+    // Clear localStorage (using correct key)
+    localStorage.removeItem("incrementalGameSave");
     
     // Get fresh initial state
     const freshState = getInitialState();
@@ -138,9 +171,11 @@ export const useGameEngine = () => {
     toggleJobActive,
     toggleSkillActive,
     toggleAbilityTraining,
+    toggleAbilityBattle,
     buyAscensionUpgrade,
     ascend,
     startBossBattle,
+    closeBattle,
     calculatePlayerStats,
     resetGame,
   };

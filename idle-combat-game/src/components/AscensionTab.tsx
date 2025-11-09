@@ -1,108 +1,79 @@
-// src/components/AscensionTab.tsx - REFACTORED
+// src/components/AscensionTab.tsx - CLEAN REDESIGN
 
 import React from 'react';
-// Corrected import: AscensionUpgradeDefinition is the correct type for upgrade definitions
-// Note: Removed StatId import as it was unused in this file.
 import type { GameState } from '../types/game';
 import type { AscensionUpgradeDefinition } from '../types/data';
-import { ASCENSION_UPGRADES, BOSS_DATA } from '../core/data';
-
-// Replacing lucide-react with react-icons (using Font Awesome)
-// FaSyncAlt: For the main AP counter (was RefreshCw)
-// FaBolt: For jobExp (was Zap)
-// FaExpandAlt: For maxSkills/maxAbilities (was Maximize)
-// NOTE: I changed FaCogs (from previous response) to FaGears for consistency with data.ts
-import { FaSyncAlt, FaBolt, FaExpandAlt } from 'react-icons/fa';
+import { ASCENSION_UPGRADES } from '../core/data';
+import { FaBolt, FaSyncAlt } from 'react-icons/fa';
 
 interface AscensionTabProps {
   gameState: GameState;
-  // Use the correct imported type for the parameter
-  buyAscensionUpgrade: (upgradeId: AscensionUpgradeDefinition['id']) => void;
+  buyAscensionUpgrade: (upgradeId: string, cost: number) => void;
   ascend: () => void;
 }
 
-// *** CRITICAL CORRECTION ***
-// The icon for 'skillExp' must be mapped correctly.
-// 'skillExp' is NOT a defined upgrade in ASCENSION_UPGRADES from data.ts.
-// The upgrades defined are 'jobExp', 'maxSkills', and 'maxAbilities'.
-// The 'IconMap' must only include keys present in ASCENSION_UPGRADES.
-const IconMap: Record<AscensionUpgradeDefinition['id'], React.FC<React.SVGProps<SVGSVGElement>>> = {
-  jobExp: FaBolt,
-  skillExp: FaBolt,
-  maxSkills: FaExpandAlt,
-  maxAbilities: FaExpandAlt,
-  maxActiveJobs: FaExpandAlt,
-};
-
 const AscensionTab: React.FC<AscensionTabProps> = ({ gameState, buyAscensionUpgrade, ascend }) => {
-  // Calculate potential points gained on Ascension
-  const currentBossData = BOSS_DATA[gameState.currentBossId];
-  // Use nullish coalescing for safety
-  const currentBossDefeats = gameState.bossProgress[gameState.currentBossId]?.defeated || 0;
-  const pointsPerDefeat = currentBossData?.ascensionPoints || 0;
-  const pendingPoints = currentBossDefeats * pointsPerDefeat;
-  const totalPointsAfterAscension = gameState.ascensionPoints + pendingPoints;
-
-  // Icon for the main AP display, mapped from RefreshCw -> FaSyncAlt
-  const RefreshIcon = FaSyncAlt;
+  // Get potential points that will be gained on ascension
+  const potentialPoints = gameState.potentialAscensionPoints || 0;
+  const currentPoints = gameState.ascensionPoints || 0;
+  const totalPointsAfterAscension = currentPoints + potentialPoints;
 
   return (
-    <div className="space-y-8 animate-fade-in">
-      <div className="flex items-center gap-4 mb-2">
-        <div className="w-1.5 h-10 rounded-full bg-gradient-to-b from-teal-500 to-amber-500"></div>
+    <div className="space-y-6 animate-fade-in">
+      {/* Header */}
+      <div className="flex items-center gap-4">
+        <div className="w-1.5 h-10 rounded-full bg-gradient-to-b from-purple-500 to-rose-500"></div>
         <div>
           <h2 className="text-2xl sm:text-3xl font-bold text-white">Ascension</h2>
-          <p className="text-sm sm:text-base text-white/70 mt-1">
+          <p className="text-sm sm:text-base text-white/70 mt-2">
             Reset for permanent power upgrades
           </p>
         </div>
       </div>
 
       {/* Ascension Summary Card */}
-      <div className="rounded-2xl border border-teal-500/40 bg-gradient-to-br from-teal-500/20 via-transparent to-teal-500/10 p-6 text-white shadow-[0_25px_60px_-35px_rgba(42,157,143,0.45)]">
-        <div className="flex items-center gap-3 mb-6">
-          <div className="p-3 rounded-xl bg-teal-500/20 text-teal-600 shadow-[0_15px_35px_-25px_rgba(42,157,143,0.45)]">
-            <RefreshIcon className="w-8 h-8" style={{ animationDuration: '3s' }} />
+      <div className="rounded-2xl bg-slate-800/50 backdrop-blur-sm p-7 sm:p-8">
+        <div className="flex items-center gap-4 mb-6">
+          <div className="p-3 rounded-xl bg-purple-500/20">
+            <FaSyncAlt className="w-7 h-7 text-purple-400" />
           </div>
-          <div>
-            <p className="text-sm text-white/60">Current Balance</p>
-            <p className="text-3xl font-bold text-white">
-              {gameState.ascensionPoints} <span className="text-xl text-white/60">AP</span>
-            </p>
+          <div className="flex-1">
+            <p className="text-sm text-slate-400">Current Balance</p>
+            <p className="text-3xl font-bold text-white">{currentPoints} AP</p>
           </div>
         </div>
 
-        <div className="space-y-3 mb-6">
-          <div className="flex justify-between items-center rounded-xl border border-charcoal-200/30 bg-charcoal-200/20 px-3 py-3">
-            <span className="text-sm text-white/70">Points to Gain</span>
-            <span className="text-lg font-bold text-teal-600">+{pendingPoints} AP</span>
+        {potentialPoints > 0 && (
+          <div className="mb-6 p-4 rounded-xl bg-teal-500/10 border border-teal-500/30">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-sm text-teal-400 font-semibold">Ready to Claim</p>
+                <p className="text-2xl font-bold text-white mt-1">+{potentialPoints} AP</p>
+              </div>
+              <div className="text-right">
+                <p className="text-sm text-slate-400">Total After Ascend</p>
+                <p className="text-xl font-bold text-amber-400">{totalPointsAfterAscension} AP</p>
+              </div>
+            </div>
           </div>
-          <div className="flex justify-between items-center rounded-xl border border-charcoal-200/30 bg-charcoal-200/20 px-3 py-3">
-            <span className="text-sm text-white/70">From {currentBossData?.name || 'Boss'} Defeats</span>
-            <span className="text-lg font-bold text-white">{currentBossDefeats}</span>
-          </div>
-          <div className="flex justify-between items-center rounded-xl border border-amber-400/40 bg-amber-400/20 px-3 py-3">
-            <span className="text-sm font-semibold text-amber-500">Total After Ascend</span>
-            <span className="text-xl font-bold text-white">{totalPointsAfterAscension} AP</span>
-          </div>
-        </div>
+        )}
 
         <button
           onClick={ascend}
-          disabled={pendingPoints === 0}
+          disabled={potentialPoints === 0}
           className={`w-full py-4 px-6 rounded-xl font-bold text-lg transition-all duration-200 ${
-            pendingPoints > 0
-              ? "bg-gradient-to-r from-teal-500 via-amber-400 to-orange-500 text-white shadow-[0_25px_55px_-30px_rgba(42,157,143,0.5)] hover:brightness-110"
-              : "bg-charcoal-200/30 text-charcoal-700/50 cursor-not-allowed"
+            potentialPoints > 0
+              ? "bg-gradient-to-r from-purple-500 to-rose-500 text-white hover:brightness-110 shadow-lg"
+              : "bg-slate-700/30 text-slate-600 cursor-not-allowed"
           }`}
         >
-          {pendingPoints > 0
-            ? `✨ ASCEND & GAIN ${pendingPoints} AP`
-            : "⏳ Defeat Bosses to Ascend"}
+          {potentialPoints > 0
+            ? `✨ Ascend & Claim ${potentialPoints} AP`
+            : "⏳ Defeat Bosses to Earn AP"}
         </button>
 
-        {pendingPoints > 0 && (
-          <p className="text-xs text-white/60 text-center mt-3">
+        {potentialPoints > 0 && (
+          <p className="text-xs text-slate-500 text-center mt-3">
             Warning: This will reset all progress except permanent upgrades
           </p>
         )}
@@ -110,99 +81,78 @@ const AscensionTab: React.FC<AscensionTabProps> = ({ gameState, buyAscensionUpgr
 
       {/* Permanent Upgrades Section */}
       <div>
-        <h3 className="text-xl font-bold text-white mb-4">Permanent Upgrades</h3>
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <h3 className="text-lg font-semibold text-white mb-4">Permanent Upgrades</h3>
+        <p className="text-sm text-slate-400 mb-4">
+          Each upgrade multiplies EXP gain by 5x. Click to view details.
+        </p>
+        <div className="grid grid-cols-1 gap-3">
           {ASCENSION_UPGRADES.map(upgrade => {
             const currentLevel = gameState.permanentUpgrades[upgrade.id] || 0;
             const cost = upgrade.cost(currentLevel);
             const isMaxLevel = currentLevel >= upgrade.maxLevel;
-            const canAfford = gameState.ascensionPoints >= cost;
-            const UpgradeIcon = IconMap[upgrade.id];
-            const nextLevelEffect = upgrade.effect(currentLevel + 1);
+            const canAfford = currentPoints >= cost;
+            const currentEffect = currentLevel > 0 ? upgrade.effect(currentLevel) : 0;
+            const nextEffect = upgrade.effect(currentLevel + 1);
 
             return (
               <div
                 key={upgrade.id}
-                className={`group rounded-xl p-5 transition-all duration-300 border ${
+                className={`rounded-xl p-5 transition-all ${
                   isMaxLevel
-                    ? "bg-gradient-to-br from-amber-400/25 to-orange-400/10 border-amber-400/40"
-                    : canAfford
-                    ? "bg-gradient-to-br from-teal-500/15 to-charcoal-200/20 border-teal-500/40 hover:border-teal-500/60 hover:shadow-lg hover:shadow-teal-500/20"
-                    : "bg-gradient-to-br from-charcoal-200/15 to-charcoal-200/25 border-charcoal-200/30"
+                    ? "bg-amber-500/10 border border-amber-500/30"
+                    : "bg-slate-800/50 border border-slate-700/50 hover:border-slate-600/50"
                 }`}
               >
-                {isMaxLevel && (
-                  <div className="absolute top-3 right-3">
-                    <span className="px-2 py-1 text-xs font-bold rounded-full bg-gradient-to-r from-amber-400 to-orange-400 text-white shadow-lg">
-                      MAX
-                    </span>
-                  </div>
-                )}
-
-                <div className="flex items-start gap-3 mb-4">
-                  <div className={`p-2.5 rounded-lg ${
-                    isMaxLevel
-                      ? "bg-amber-400/20"
-                      : canAfford
-                      ? "bg-teal-500/20"
-                      : "bg-charcoal-200/20"
-                  }`}>
-                    {UpgradeIcon && (
-                      <UpgradeIcon className={`w-6 h-6 ${
-                        isMaxLevel
-                          ? "text-amber-500"
-                          : canAfford
-                          ? "text-teal-600"
-                          : "text-charcoal-700/70"
-                      }`} />
-                    )}
-                  </div>
-                  
-                  <div className="flex-1 min-w-0">
-                    <h4 className="text-lg font-bold text-white mb-1">{upgrade.name}</h4>
+                <div className="flex items-start justify-between gap-4">
+                  <div className="flex-1">
                     <div className="flex items-center gap-3 mb-2">
-                      <span className="text-xs text-white/60">Level</span>
-                      <div className="flex items-center gap-1">
-                        <span className="text-sm font-bold text-teal-600">{currentLevel}</span>
-                        <span className="text-xs text-white/40">/</span>
-                        <span className="text-sm font-bold text-white/70">{upgrade.maxLevel}</span>
-                      </div>
+                      <FaBolt className={`h-5 w-5 ${isMaxLevel ? "text-amber-400" : "text-purple-400"}`} />
+                      <h4 className="text-base font-semibold text-white">{upgrade.name}</h4>
+                      <span className={`px-2.5 py-0.5 rounded-full text-xs font-semibold ${
+                        isMaxLevel
+                          ? "bg-amber-500/20 text-amber-400"
+                          : "bg-slate-700/50 text-slate-400"
+                      }`}>
+                        Level {currentLevel} / {upgrade.maxLevel}
+                      </span>
                     </div>
-                    {!isMaxLevel && (
-                      <p className="text-sm text-teal-600">
-                        Next: +{nextLevelEffect}
-                      </p>
+                    <p className="text-sm text-slate-400 mb-3">{upgrade.description}</p>
+                    <div className="flex items-center gap-4 text-sm">
+                      {currentLevel > 0 && (
+                        <div>
+                          <span className="text-slate-500">Current: </span>
+                          <span className="text-teal-400 font-semibold">+{currentEffect}x</span>
+                        </div>
+                      )}
+                      {!isMaxLevel && (
+                        <div>
+                          <span className="text-slate-500">Next: </span>
+                          <span className="text-white font-semibold">+{nextEffect}x</span>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+
+                  <div className="text-right">
+                    {!isMaxLevel ? (
+                      <button
+                        onClick={() => buyAscensionUpgrade(upgrade.id, cost)}
+                        disabled={!canAfford}
+                        className={`px-4 py-2 rounded-lg font-semibold text-sm transition-all ${
+                          canAfford
+                            ? "bg-purple-500 text-white hover:brightness-110"
+                            : "bg-slate-700/30 text-slate-600 cursor-not-allowed"
+                        }`}
+                      >
+                        {cost} AP
+                      </button>
+                    ) : (
+                      <div className="px-4 py-2 rounded-lg bg-amber-500/20 text-amber-400 font-semibold text-sm">
+                        MAX
+                      </div>
                     )}
                   </div>
                 </div>
-
-                {/* Progress Bar */}
-                <div className="mb-4">
-                  <div className="w-full h-2 bg-charcoal-200/30 rounded-full overflow-hidden">
-                    <div
-                      className={`h-full rounded-full transition-all duration-300 ${
-                        isMaxLevel
-                          ? "bg-gradient-to-r from-amber-400 to-orange-400"
-                          : "bg-gradient-to-r from-teal-500 to-teal-600"
-                      }`}
-                      style={{ width: `${(currentLevel / upgrade.maxLevel) * 100}%` }}
-                    />
-                  </div>
-                </div>
-
-                <button
-                  onClick={() => buyAscensionUpgrade(upgrade.id)}
-                  disabled={isMaxLevel || !canAfford}
-                  className={`w-full py-2.5 px-4 rounded-lg font-semibold text-sm transition-all duration-200 ${
-                    isMaxLevel
-                      ? "bg-amber-400/20 text-amber-500 border border-amber-400/40 cursor-default"
-                      : canAfford
-                      ? "bg-gradient-to-r from-teal-500 via-amber-400 to-orange-500 text-white shadow-[0_18px_35px_-20px_rgba(233,196,106,0.5)] hover:brightness-110"
-                      : "bg-charcoal-200/30 text-charcoal-700/50 cursor-not-allowed"
-                  }`}
-                >
-                  {isMaxLevel ? "⭐ Max Level" : `Upgrade • ${cost} AP`}
-                </button>
               </div>
             );
           })}

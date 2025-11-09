@@ -39,6 +39,7 @@ export interface AbilityState {
   exp: number;
   unlocked: boolean;
   isTraining: boolean;
+  isActiveBattle: boolean; // Selected for battle use
 }
 
 export const StatValue = {
@@ -74,6 +75,48 @@ export interface BossProgress {
   lastBattleLog: BattleLogEntry[];
 }
 
+// --- Active Battle State ---
+
+export interface BattleAbilityState {
+  abilityId: string;
+  name: string;
+  level: number;
+  cooldown: number; // Current cooldown remaining
+  maxCooldown: number; // For calculating progress bar
+  baseDamage: number;
+  damageType: DamageType;
+}
+
+export interface BattleState {
+  isActive: boolean;
+  battleTime: number;
+  
+  // Player state
+  playerHp: number;
+  playerMaxHp: number;
+  playerStats: PlayerStats;
+  playerAbilities: BattleAbilityState[];
+  
+  // Boss state
+  bossId: string;
+  bossName: string;
+  bossHp: number;
+  bossMaxHp: number;
+  bossStats: PlayerStats;
+  bossAbilities: BattleAbilityState[];
+  
+  // Battle log
+  log: BattleLogEntry[];
+  
+  // Battle result (set when battle ends)
+  result?: {
+    won: boolean;
+    ascensionPoints?: number;
+    nextBossUnlocked?: boolean;
+    nextBossName?: string;
+  };
+}
+
 // --- Main Game State ---
 
 export interface GameState {
@@ -84,12 +127,17 @@ export interface GameState {
 
   // Currencies and Permanent Systems
   gold: number;
-  ascensionPoints: number;
+  ascensionPoints: number; // Actual AP that can be spent on upgrades
+  potentialAscensionPoints: number; // AP earned but not yet claimed through ascension
   permanentUpgrades: Record<AscensionUpgradeDefinition["id"], number>;
+  ascensionUnlocked: boolean; // Persists through resets - unlocked after first boss defeat
 
   // Limits and Time
   currentBossId: BossDefinition["id"];
   bossProgress: Record<BossDefinition["id"], BossProgress>; // Tracks defeats per boss
   lastTickTime: number;
   activeTab: "Jobs" | "Stats" | "Skills" | "Abilities" | "Boss" | "Ascension";
+  
+  // Active Battle
+  battleState: BattleState | null;
 }

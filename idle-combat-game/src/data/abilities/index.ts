@@ -1,8 +1,8 @@
 // Abilities Data Registry
 // Central export for all ability definitions
 
-import { QuickStrike, ShieldBash } from "./physical";
-import { Fireball } from "./magical";
+import { Smash, QuickStrike, ShieldBash } from "./physical";
+import { Beam, Fireball } from "./magical";
 import type { AbilityDefinition } from "../../types/data";
 
 /**
@@ -21,6 +21,8 @@ import type { AbilityDefinition } from "../../types/data";
  * - Ultimate: High-power, long cooldown abilities (future)
  */
 export const ALL_ABILITIES: Record<string, AbilityDefinition> = {
+  Smash,       // Starter physical ability
+  Beam,        // Starter magical ability
   QuickStrike,
   ShieldBash,
   Fireball,

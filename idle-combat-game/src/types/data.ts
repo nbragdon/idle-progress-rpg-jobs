@@ -58,7 +58,7 @@ export interface StatusEffectData {
 }
 
 export interface AbilityEffect {
-  damageMultiplier: number; // e.g., 2.0
+  baseDamage: number; // Flat damage amount for the ability
   damageType: DamageType;
   statusEffect?: StatusEffectData;
 }
@@ -112,6 +112,17 @@ export interface AbilityDefinition {
   cooldown: number; // Base cooldown in seconds
   unlockCondition: { stat: StatId; required: number };
   effects: AbilityEffect[];
+  // Optional: Custom scaling for starter abilities
+  damageScaling?: {
+    type: "percentage"; // Percentage increase per level
+    value: number; // e.g., 0.05 for 5% per level
+  };
+  cooldownScaling?: {
+    type: "flat"; // Flat reduction per X levels
+    reductionPerLevels: number; // e.g., 0.1 reduction per 10 levels
+    levelsPerReduction: number; // e.g., 10 levels
+    minCooldown: number; // Minimum cooldown in seconds
+  };
 }
 
 export interface BossDefinition {
@@ -119,6 +130,7 @@ export interface BossDefinition {
   name: string;
   baseHp: number;
   baseDamage: number;
+  stats: { [key in StatId]: number }; // Boss has full stats like player
   ascensionPoints: number;
   nextBoss?: string;
   bossAbility: AbilityDefinition;

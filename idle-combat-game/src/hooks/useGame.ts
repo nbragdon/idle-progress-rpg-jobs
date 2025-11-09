@@ -11,7 +11,7 @@ import {
   getMaxActiveSkills,
   getMaxActiveAbilities,
 } from "../core/gameCalculations";
-import { FaBriefcase, FaChartBar, FaGraduationCap, FaFistRaised, FaSkull, FaRedoAlt, FaCog } from "react-icons/fa";
+import { FaBriefcase, FaGraduationCap, FaFistRaised, FaSkull, FaRedoAlt, FaCog } from "react-icons/fa";
 import type { TabId } from "./useGameUI";
 import type { BossDefinition } from "../types/data";
 
@@ -19,7 +19,6 @@ interface TabDefinition {
   id: TabId;
   name: string;
   icon: React.ComponentType<{ className?: string }>;
-  disabled?: boolean;
 }
 
 export const useGame = () => {
@@ -33,9 +32,11 @@ export const useGame = () => {
     toggleJobActive: engineToggleJobActive,
     toggleSkillActive: engineToggleSkillActive,
     toggleAbilityTraining: engineToggleAbilityTraining,
+    toggleAbilityBattle: engineToggleAbilityBattle,
     buyAscensionUpgrade: engineBuyUpgrade,
     ascend: engineAscend,
     startBossBattle: engineStartBattle,
+    closeBattle: engineCloseBattle,
     calculatePlayerStats: engineCalculateStats,
     resetGame: engineResetGame,
   } = useGameEngine();
@@ -77,19 +78,28 @@ export const useGame = () => {
   );
 
   const isAscensionVisible = useMemo(() => {
-    return Object.values(gameState.bossProgress).some(progress => progress.defeated > 0);
-  }, [gameState.bossProgress]);
+    // Ascension is visible once unlocked (first boss defeat) and stays visible through resets
+    return gameState.ascensionUnlocked;
+  }, [gameState.ascensionUnlocked]);
 
   // Tab definitions
-  const tabs: TabDefinition[] = useMemo(() => [
-    { id: "Jobs", name: "Jobs", icon: FaBriefcase },
-    { id: "Stats", name: "Stats", icon: FaChartBar },
-    { id: "Skills", name: "Skills", icon: FaGraduationCap },
-    { id: "Abilities", name: "Abilities", icon: FaFistRaised },
-    { id: "Boss", name: "Boss", icon: FaSkull },
-    { id: "Ascension", name: "Ascension", icon: FaRedoAlt, disabled: !isAscensionVisible },
-    { id: "Settings", name: "Settings", icon: FaCog },
-  ], [isAscensionVisible]);
+  const tabs: TabDefinition[] = useMemo(() => {
+    const baseTabs: TabDefinition[] = [
+      { id: "Jobs", name: "Jobs", icon: FaBriefcase },
+      { id: "Skills", name: "Skills", icon: FaGraduationCap },
+      { id: "Abilities", name: "Abilities", icon: FaFistRaised },
+      { id: "Boss", name: "Boss", icon: FaSkull },
+    ];
+    
+    // Only add Ascension tab if it's been unlocked
+    if (isAscensionVisible) {
+      baseTabs.push({ id: "Ascension", name: "Ascension", icon: FaRedoAlt });
+    }
+    
+    baseTabs.push({ id: "Settings", name: "Settings", icon: FaCog });
+    
+    return baseTabs;
+  }, [isAscensionVisible]);
 
   // Wrapper functions that include limits
   const toggleJobActive = (jobId: string) => {
@@ -105,9 +115,14 @@ export const useGame = () => {
   };
 
   const toggleAbilityTraining = (abilityId: string) => {
-    const success = engineToggleAbilityTraining(abilityId, maxLimits.maxActiveAbilities);
-    if (!success && gameState.abilities[abilityId] && !gameState.abilities[abilityId].isTraining) {
-      showAlert(`Cannot train more than ${maxLimits.maxActiveAbilities} abilities at once!`);
+    // Abilities now auto-swap when at limit, so no error alert needed
+    engineToggleAbilityTraining(abilityId, maxLimits.maxActiveAbilities);
+  };
+
+  const toggleAbilityBattle = (abilityId: string) => {
+    const success = engineToggleAbilityBattle(abilityId, maxLimits.maxActiveAbilities);
+    if (!success && gameState.abilities[abilityId] && !gameState.abilities[abilityId].isActiveBattle) {
+      showAlert(`Cannot have more than ${maxLimits.maxActiveAbilities} abilities active in battle!`);
     }
   };
 
@@ -119,15 +134,20 @@ export const useGame = () => {
   };
 
   const ascend = () => {
-    // Calculate ascension points before ascending
-    const points = Math.floor(totalLevels / 10); // Example formula
-    engineAscend(points);
-    showAlert(`Ascended! Gained ${points} Ascension Points!`);
+    const potentialPoints = gameState.potentialAscensionPoints;
+    engineAscend();
+    showAlert(`Ascended! Claimed ${potentialPoints} Ascension Points!`);
   };
 
   const startBossBattle = () => {
-    engineStartBattle();
-    showAlert("Boss battle started!");
+    const success = engineStartBattle();
+    if (!success) {
+      showAlert("You must select at least 1 ability for battle! Go to the Abilities tab.");
+    }
+  };
+
+  const closeBattle = () => {
+    engineCloseBattle();
   };
 
   const resetGame = () => {
@@ -154,9 +174,11 @@ export const useGame = () => {
     toggleJobActive,
     toggleSkillActive,
     toggleAbilityTraining,
+    toggleAbilityBattle,
     buyAscensionUpgrade,
     ascend,
     startBossBattle,
+    closeBattle,
     resetGame,
   };
 };
