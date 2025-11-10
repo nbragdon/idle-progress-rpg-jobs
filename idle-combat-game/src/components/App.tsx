@@ -151,11 +151,11 @@ const App: React.FC = () => {
                 </div>
                 <div className="flex items-center gap-1">
                   <span className="text-slate-500 font-medium">CRIT</span>
-                  <span className="text-slate-300 font-semibold">{(playerStats.CRIT_C * 100).toFixed(1)}%</span>
+                  <span className="text-slate-300 font-semibold">{playerStats.CRIT_C.toFixed(1)}</span>
                 </div>
                 <div className="flex items-center gap-1">
                   <span className="text-slate-500 font-medium">CRIT DMG</span>
-                  <span className="text-slate-300 font-semibold">{(playerStats.CRIT_D * 100).toFixed(0)}%</span>
+                  <span className="text-slate-300 font-semibold">{playerStats.CRIT_D.toFixed(0)}%</span>
                 </div>
               </div>
               <button
@@ -264,9 +264,9 @@ const App: React.FC = () => {
               // Format display value
               let displayValue = value.toString();
               if (statId === 'CRIT_C') {
-                displayValue = `${(value * 100).toFixed(1)}%`;
+                displayValue = value.toFixed(1); // Raw value, no percentage
               } else if (statId === 'CRIT_D') {
-                displayValue = `${(value * 100).toFixed(0)}%`;
+                displayValue = `${value.toFixed(0)}%`;
               }
               
               return (

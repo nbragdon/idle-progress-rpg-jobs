@@ -122,9 +122,9 @@ const BossTab: React.FC<BossTabProps> = ({
               // Format display value
               let displayValue = value.toString();
               if (statId === 'CRIT_C') {
-                displayValue = `${(value * 100).toFixed(1)}%`;
+                displayValue = value.toFixed(1); // Raw value, no percentage
               } else if (statId === 'CRIT_D') {
-                displayValue = `${(value * 100).toFixed(0)}%`;
+                displayValue = `${value.toFixed(0)}%`;
               }
               
               return (

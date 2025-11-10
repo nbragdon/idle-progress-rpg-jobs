@@ -15,7 +15,7 @@ export const Shadow: JobDefinition = {
   statBonuses: [
     { stat: StatValue.AGI, value: 3.0 },
     { stat: StatValue.DEX, value: 2.0 },
-    { stat: StatValue.CRIT_C, value: 0.015 }, // +1.5% crit chance per level
+    { stat: StatValue.CRIT_C, value: 5.0 }, // High crit chance scaling
   ],
   unlockConditions: [
     { type: "jobLevel", jobId: "Rogue", level: 10 },
@@ -30,11 +30,12 @@ export const Thief: JobDefinition = {
   traits: [TraitValue.Opportunist, TraitValue.Swift],
   statBonuses: [
     { stat: StatValue.DEX, value: 3.5 },
-    { stat: StatValue.CRIT_D, value: 0.02 }, // +2% crit damage per level
-    { stat: StatValue.CRIT_C, value: 0.01 }, // +1% crit chance per level
+    { stat: StatValue.CRIT_D, value: 2.0 }, // +2% crit damage per level
+    { stat: StatValue.CRIT_C, value: 3.0 }, // Moderate crit chance scaling
   ],
   unlockConditions: [
-    { type: "stat", stat: StatValue.DEX, value: 20 },
+    { type: "stat", stat: StatValue.DEX, value: 40 },
+    { type: "stat", stat: StatValue.AGI, value: 25 },
   ],
 };
 
@@ -51,8 +52,9 @@ export const Skirmisher: JobDefinition = {
     { stat: StatValue.FRT, value: 1.5 },
   ],
   unlockConditions: [
-    { type: "jobLevel", jobId: "Rogue", level: 8 },
-    { type: "stat", stat: StatValue.AGI, value: 10 },
+    { type: "jobLevel", jobId: "Rogue", level: 12 },
+    { type: "stat", stat: StatValue.AGI, value: 30 },
+    { type: "stat", stat: StatValue.DEX, value: 25 },
   ],
 };
 

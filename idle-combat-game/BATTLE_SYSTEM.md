@@ -58,20 +58,20 @@ Final Damage = 100 × 0.25 = 25 damage (not 10, above minimum)
 ```
 
 ### **3. Critical Hits**
-- **Base Crit Chance:** From CRIT_C stat (e.g., 0.15 = 15%)
-- **Defense Reduction:** `finalCrit = baseCrit × (1 - avgDefense × 0.001)`
+- **Base Crit Chance:** From CRIT_C stat (absolute value, not percentage)
+- **Comparative Formula:** `finalCrit = CRIT_C / (10 × avgDefense)`
+- **100% Crit:** When CRIT_C = 10× average defense
 - **Can exceed 100%** (guaranteed crits)
-- **Crit Damage:** Multiplies damage by CRIT_D stat (e.g., 2.0 = 200%)
+- **Crit Damage:** Multiplies damage by CRIT_D stat (stored as percentage, e.g., 150 = 150% damage)
 
 **Example:**
 ```
-Attacker: 25% crit chance (0.25), 2.0× crit damage
+Attacker: CRIT_C = 200, CRIT_D = 150
 Defender: 100 TGH, 100 FRT (avg = 100)
 
-Reduction = 100 × 0.001 = 0.10 (10%)
-Final Crit Chance = 0.25 × (1 - 0.10) = 0.225 (22.5%)
+Final Crit Chance = 200 / (10 × 100) = 0.20 (20%)
 
-If crit triggers: damage × 2.0
+If crit triggers: damage × (150 / 100) = damage × 1.5
 ```
 
 ### **4. HP Calculation**
@@ -109,40 +109,57 @@ When multiple abilities are off cooldown:
 
 ## Boss Stats
 
+### **Boss Scaling Philosophy**
+Each boss is approximately **10x stronger** than the previous boss:
+- All stats are multiplied by ~10
+- HP scales by 10x (through CON)
+- Damage scales by 10x
+- Defenses scale by 10x
+- CRIT_C scales by 10x (relative to opponent defenses)
+
+This scaling ensures:
+1. Each boss requires strategic progression and ascension
+2. Players must optimize builds between boss fights
+3. Natural progression gates that feel rewarding to overcome
+4. Future bosses can extend this pattern (15x, 20x, etc.)
+
 ### **Training Dummy** (Tier 1)
 ```
-HP: 100 (CON 10)
-STR: 5  | DEX: 5  | AGI: 5
-TGH: 10 | FRT: 10 | CON: 10
-INT: 5  | CONC: 5 | RES: 5
-Crit: 5% × 1.5
+HP: 810 (CON 80)
+STR: 50  | DEX: 45  | AGI: 45
+TGH: 60  | FRT: 60  | CON: 80
+INT: 45  | CONC: 50 | RES: 50
+CRIT_C: 300 | CRIT_D: 175%
 
-Ability: Wobble (10s CD, ×1.0 True damage)
+Ability: Wobble (3.5s CD, 25 Physical damage)
 Reward: 1 AP
+Estimated Clear Time: 30-45 minutes with strategic play
 ```
 
 ### **Goblin King** (Tier 2)
 ```
-HP: 500 (CON 50)
-STR: 30 | DEX: 25 | AGI: 20
-TGH: 40 | FRT: 30 | CON: 50
-INT: 15 | CONC: 20 | RES: 25
-Crit: 10% × 1.75
+HP: 8010 (CON 800) [~10x Training Dummy]
+STR: 500  | DEX: 450  | AGI: 450
+TGH: 600  | FRT: 600  | CON: 800
+INT: 450  | CONC: 500 | RES: 500
+CRIT_C: 3000 | CRIT_D: 200%
 
-Ability: Vicious Strike (8s CD, ×1.5 Physical)
+Ability: Vicious Strike (3s CD, 250 Physical damage)
 Reward: 5 AP
+Requires: Multiple ascensions, optimized build
 ```
 
 ### **Ancient Dragon** (Tier 3)
 ```
-HP: 5000 (CON 500)
-STR: 80  | DEX: 60  | AGI: 50
-TGH: 120 | FRT: 100 | CON: 500
-INT: 150 | CONC: 80  | RES: 90
-Crit: 25% × 2.0
+HP: 80010 (CON 8000) [~10x Goblin King]
+STR: 5000 | DEX: 4500 | AGI: 4500
+TGH: 6000 | FRT: 6000 | CON: 8000
+INT: 4500 | CONC: 5000 | RES: 5000
+CRIT_C: 30000 | CRIT_D: 225%
 
-Ability: Inferno Breath (15s CD, ×3.0 Magical)
+Ability: Inferno Breath (2.5s CD, 2500 Magical damage)
 Reward: 50 AP
+Requires: Significant ascension investment, multiple job mastery
 ```
 
 ## Battle Outcomes

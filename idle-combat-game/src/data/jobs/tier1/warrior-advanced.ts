@@ -30,11 +30,13 @@ export const Barbarian: JobDefinition = {
   traits: [TraitValue.Aggressive, TraitValue.Physical],
   statBonuses: [
     { stat: StatValue.STR, value: 3.5 },
-    { stat: StatValue.CRIT_D, value: 0.015 }, // +1.5% crit damage per level
+    { stat: StatValue.CRIT_D, value: 1.5 }, // +1.5% crit damage per level
+    { stat: StatValue.CRIT_C, value: 2.5 }, // Moderate crit chance scaling
     { stat: StatValue.CON, value: 1.0 },
   ],
   unlockConditions: [
-    { type: "stat", stat: StatValue.STR, value: 20 },
+    { type: "stat", stat: StatValue.STR, value: 40 },
+    { type: "stat", stat: StatValue.CON, value: 25 },
   ],
 };
 
@@ -51,8 +53,9 @@ export const Commander: JobDefinition = {
     { stat: StatValue.CONC, value: 1.5 },
   ],
   unlockConditions: [
-    { type: "jobLevel", jobId: "Warrior", level: 8 },
-    { type: "stat", stat: StatValue.INT, value: 10 },
+    { type: "jobLevel", jobId: "Warrior", level: 12 },
+    { type: "stat", stat: StatValue.INT, value: 30 },
+    { type: "stat", stat: StatValue.STR, value: 25 },
   ],
 };
 

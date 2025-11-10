@@ -3,6 +3,7 @@
 
 import { BASIC_JOBS } from "./basic";
 import { TIER1_JOBS } from "./tier1";
+import { TIER2_JOBS } from "./tier2";
 import type { JobDefinition } from "../../types/data";
 
 /**
@@ -17,24 +18,25 @@ import type { JobDefinition } from "../../types/data";
  * Job tiers:
  * - Basic: Starting jobs, no unlock requirements
  * - Tier 1: Advanced specializations, require level/stat conditions
- * - Tier 2+: Master classes (to be added)
+ * - Tier 2: Elite classes with significant unlock requirements
+ * - Tier 3+: Future expansions
  */
 export const ALL_JOBS: Record<string, JobDefinition> = {
   ...BASIC_JOBS,
   ...TIER1_JOBS,
+  ...TIER2_JOBS,
   // Future tiers will be added here:
-  // ...TIER2_JOBS,
   // ...TIER3_JOBS,
 };
 
 // Export individual tiers for organizational purposes
-export { BASIC_JOBS, TIER1_JOBS };
+export { BASIC_JOBS, TIER1_JOBS, TIER2_JOBS };
 
 // Helper to get jobs by tier
 export const getJobsByTier = () => ({
   basic: Object.values(BASIC_JOBS),
   tier1: Object.values(TIER1_JOBS),
-  // tier2: Object.values(TIER2_JOBS),
+  tier2: Object.values(TIER2_JOBS),
 });
 
 

@@ -59,8 +59,8 @@ export class GameEngine {
       [StatValue.FRT]: 1,
       [StatValue.CONC]: 1,
       [StatValue.RES]: 1,
-      [StatValue.CRIT_C]: 0, // Base 0% crit chance
-      [StatValue.CRIT_D]: 0.5, // Base 50% crit damage
+      [StatValue.CRIT_C]: 0, // Base 0 crit chance
+      [StatValue.CRIT_D]: 150, // Base 150% crit damage (1.5x damage on crits)
     };
 
     Object.entries(this.state.jobs).forEach(([jobId, job]) => {
@@ -85,7 +85,7 @@ export class GameEngine {
     }
     
     const EXP_PER_SECOND = 10; // Increased for faster progression
-    const SKILL_EXP_PER_SECOND = 5; // Increased proportionally
+    const SKILL_EXP_PER_SECOND = 25; // 5x faster for skills and abilities
     
     // Get ascension upgrade multipliers
     const jobExpLevel = this.state.permanentUpgrades.jobExp || 0;
@@ -102,6 +102,7 @@ export class GameEngine {
     // Calculate skill bonuses - ALL skills apply regardless of training status
     const skillBonuses: Record<string, number> = {}; // trait -> bonus multiplier
     let globalSkillExpBonus = 0; // Global skill EXP bonus
+    let globalAbilityExpBonus = 0; // Global ability EXP bonus
     Object.entries(this.state.skills).forEach(([skillId, skill]) => {
       const skillDef = SKILL_DATA[skillId];
       const { level } = calculateLevelFromExp(skill.exp);
@@ -113,6 +114,8 @@ export class GameEngine {
             skillBonuses[effect.trait] = currentBonus + (effect.value * level);
           } else if (effect.type === "skillExp") {
             globalSkillExpBonus += effect.value * level;
+          } else if (effect.type === "abilityExp") {
+            globalAbilityExpBonus += effect.value * level;
           }
         });
       }
@@ -153,12 +156,13 @@ export class GameEngine {
       }
     });
 
-    // Grant EXP to training abilities (with ascension multiplier)
+    // Grant EXP to training abilities (with skill bonus and ascension multiplier)
     const updatedAbilities = { ...newState.abilities };
     Object.keys(updatedAbilities).forEach((abilityId) => {
       const ability = updatedAbilities[abilityId];
       if (ability.isTraining && ability.unlocked) {
-        const expGain = SKILL_EXP_PER_SECOND * deltaTime * abilityExpMultiplier;
+        const expMultiplier = 1.0 + globalAbilityExpBonus;
+        const expGain = SKILL_EXP_PER_SECOND * deltaTime * expMultiplier * abilityExpMultiplier;
         updatedAbilities[abilityId] = { ...ability, exp: ability.exp + expGain };
         hasChanges = true;
       }
@@ -634,7 +638,8 @@ export class GameEngine {
     // Apply crit
     const critChance = calculateCritChance(attackerStats[StatValue.CRIT_C], defenderStats);
     if (Math.random() < critChance) {
-      damage *= attackerStats[StatValue.CRIT_D];
+      // CRIT_D stored as percentage (e.g., 150 = 150% damage)
+      damage *= (attackerStats[StatValue.CRIT_D] / 100);
     }
     
     // Apply damage reduction

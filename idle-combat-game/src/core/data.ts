@@ -99,13 +99,13 @@ export const STAT_MAP: Record<StatId, StatDefinition> = {
   [StatValue.CRIT_C]: {
     id: StatValue.CRIT_C,
     name: "Crit Chance",
-    desc: "Base chance to deal critical damage. Reduced by opponent's average TGH and FRT.",
+    desc: "Determines critical hit chance relative to opponent's defenses. When 10x opponent's average TGH and FRT, grants 100% crit.",
     icon: FaDiceD6, // Dices -> FaDiceD6
   },
   [StatValue.CRIT_D]: {
     id: StatValue.CRIT_D,
     name: "Crit Damage",
-    desc: "Damage multiplier on critical hits. Value of 1.5 means 150% damage on crits.",
+    desc: "Damage multiplier on critical hits. Stored as percentage (e.g., 150 = 150% damage on crits).",
     icon: FaBurst,
   },
 };
@@ -134,27 +134,27 @@ export const BOSS_DATA: Record<string, BossDefinition> = {
     id: "TrainingDummy",
     name: "Training Dummy",
     baseHp: 0, // HP now calculated from CON: 10 + (CON × 10)
-    baseDamage: 15,
+    baseDamage: 25,
     stats: {
-      [StatValue.STR]: 35,
-      [StatValue.DEX]: 30,
-      [StatValue.AGI]: 30,
-      [StatValue.TGH]: 40,
-      [StatValue.CON]: 40, // 10 + (40 × 10) = 410 HP
-      [StatValue.INT]: 30,
-      [StatValue.FRT]: 40,
-      [StatValue.CONC]: 35,
-      [StatValue.RES]: 35,
-      [StatValue.CRIT_C]: 0.10,
-      [StatValue.CRIT_D]: 1.75,
+      [StatValue.STR]: 50,
+      [StatValue.DEX]: 45,
+      [StatValue.AGI]: 45,
+      [StatValue.TGH]: 60,
+      [StatValue.CON]: 80, // 10 + (80 × 10) = 810 HP
+      [StatValue.INT]: 45,
+      [StatValue.FRT]: 60,
+      [StatValue.CONC]: 50,
+      [StatValue.RES]: 50,
+      [StatValue.CRIT_C]: 300, // Moderate crit chance vs player defenses
+      [StatValue.CRIT_D]: 175, // 175% crit damage
     },
     ascensionPoints: 1,
     nextBoss: "GoblinKing",
     bossAbility: {
       name: "Wobble",
-      cooldown: 4.0,
+      cooldown: 3.5,
       // Added mandatory damageType field for AbilityEffect consistency
-      effects: [{ baseDamage: 15, damageType: DamageValue.True }],
+      effects: [{ baseDamage: 25, damageType: DamageValue.Physical }],
       id: "",
       description: "",
       icon: function (_props: IconBaseProps): React.ReactNode {
@@ -172,28 +172,28 @@ export const BOSS_DATA: Record<string, BossDefinition> = {
     id: "GoblinKing",
     name: "Goblin King",
     baseHp: 0, // HP now calculated from CON: 10 + (CON × 10)
-    baseDamage: 150,
+    baseDamage: 250,
     stats: {
-      [StatValue.STR]: 350,
-      [StatValue.DEX]: 300,
-      [StatValue.AGI]: 300,
-      [StatValue.TGH]: 400,
-      [StatValue.CON]: 400, // 10 + (400 × 10) = 4010 HP (~10x Training Dummy's 410)
-      [StatValue.INT]: 300,
-      [StatValue.FRT]: 400,
-      [StatValue.CONC]: 350,
-      [StatValue.RES]: 350,
-      [StatValue.CRIT_C]: 0.20,
-      [StatValue.CRIT_D]: 2.0,
+      [StatValue.STR]: 500,
+      [StatValue.DEX]: 450,
+      [StatValue.AGI]: 450,
+      [StatValue.TGH]: 600,
+      [StatValue.CON]: 800, // 10 + (800 × 10) = 8010 HP (~10x Training Dummy)
+      [StatValue.INT]: 450,
+      [StatValue.FRT]: 600,
+      [StatValue.CONC]: 500,
+      [StatValue.RES]: 500,
+      [StatValue.CRIT_C]: 3000, // ~10x Training Dummy
+      [StatValue.CRIT_D]: 200, // 200% crit damage
     },
     ascensionPoints: 5,
     nextBoss: "AncientDragon",
     bossAbility: {
       name: "Vicious Strike",
-      cooldown: 6.0,
+      cooldown: 3.0,
       // Converted existing boss ability to use the new AbilityEffect interface
       effects: [{
-        baseDamage: 150,
+        baseDamage: 250,
         damageType: DamageValue.Physical, // Defaulting to Physical for a strike
         statusEffect: {
           id: "Weakness" as StatusEffectId, duration: 5.0,
@@ -217,26 +217,26 @@ export const BOSS_DATA: Record<string, BossDefinition> = {
     id: "AncientDragon",
     name: "Ancient Dragon",
     baseHp: 0, // HP now calculated from CON: 10 + (CON × 10)
-    baseDamage: 1500,
+    baseDamage: 2500,
     stats: {
-      [StatValue.STR]: 3500,
-      [StatValue.DEX]: 3000,
-      [StatValue.AGI]: 3000,
-      [StatValue.TGH]: 4000,
-      [StatValue.CON]: 4000, // 10 + (4000 × 10) = 40,010 HP (~10x Goblin King's 4010)
-      [StatValue.INT]: 3000,
-      [StatValue.FRT]: 4000,
-      [StatValue.CONC]: 3500,
-      [StatValue.RES]: 3500,
-      [StatValue.CRIT_C]: 0.30,
-      [StatValue.CRIT_D]: 2.5,
+      [StatValue.STR]: 5000,
+      [StatValue.DEX]: 4500,
+      [StatValue.AGI]: 4500,
+      [StatValue.TGH]: 6000,
+      [StatValue.CON]: 8000, // 10 + (8000 × 10) = 80,010 HP (~10x Goblin King)
+      [StatValue.INT]: 4500,
+      [StatValue.FRT]: 6000,
+      [StatValue.CONC]: 5000,
+      [StatValue.RES]: 5000,
+      [StatValue.CRIT_C]: 30000, // ~10x Goblin King
+      [StatValue.CRIT_D]: 225, // 225% crit damage
     },
     ascensionPoints: 50,
     bossAbility: {
       name: "Inferno Breath",
-      cooldown: 8.0,
+      cooldown: 2.5,
       // Converted existing boss ability to use the new AbilityEffect interface
-      effects: [{ baseDamage: 1500, damageType: DamageValue.Magic }],
+      effects: [{ baseDamage: 2500, damageType: DamageValue.Magic }],
       id: "",
       description: "",
       icon: function (_props: IconBaseProps): React.ReactNode {

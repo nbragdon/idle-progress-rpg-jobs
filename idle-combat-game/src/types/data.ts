@@ -83,6 +83,13 @@ export interface JobDefinition {
   unlockConditions?: Array<
     | { type: "jobLevel"; jobId: string; level: number }
     | { type: "stat"; stat: StatId; value: number }
+    | { type: "totalJobLevels"; value: number }
+    | { type: "totalSkillLevels"; value: number }
+    | { type: "abilityLevel"; abilityId: string; level: number }
+    | { type: "skillLevel"; skillId: string; level: number }
+    | { type: "bossDefeats"; bossId: string; count: number }
+    | { type: "anyJobFromList"; jobIds: string[]; level: number }
+    | { type: "anyStat"; value: number }
   >;
 }
 
@@ -94,11 +101,18 @@ export interface SkillDefinition {
   effects: Array<
     | { type: "jobExp"; value: number } // Global job EXP bonus
     | { type: "skillExp"; value: number } // Global skill EXP bonus
+    | { type: "abilityExp"; value: number } // Global ability EXP bonus
     | { type: "traitJobExp"; trait: TraitType; value: number } // Trait-specific job EXP bonus
   >;
   unlockConditions?: Array<
     | { type: "stat"; stat: StatId; value: number }
     | { type: "skillTotalLevels"; value: number }
+    | { type: "totalJobLevels"; value: number }
+    | { type: "totalSkillLevels"; value: number }
+    | { type: "skillLevel"; skillId: string; level: number }
+    | { type: "bossDefeats"; bossId: string; count: number }
+    | { type: "anyJobFromList"; jobIds: string[]; level: number }
+    | { type: "anyAbilityLevel"; level: number }
   >;
 }
 

@@ -28,7 +28,8 @@ export const Rogue: JobDefinition = {
   statBonuses: [
     { stat: StatValue.DEX, value: 2.0 },
     { stat: StatValue.AGI, value: 1.5 },
-    { stat: StatValue.CRIT_D, value: 0.01 }, // +1% crit damage per level
+    { stat: StatValue.CRIT_D, value: 1.0 }, // +1% crit damage per level
+    { stat: StatValue.CRIT_C, value: 2.0 }, // Basic crit chance scaling
   ],
 };
 

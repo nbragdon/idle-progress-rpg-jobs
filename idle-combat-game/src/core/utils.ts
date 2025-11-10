@@ -64,15 +64,64 @@ export const isJobUnlocked = (
 
   // All conditions must be met
   return jobDef.unlockConditions.every((condition) => {
-    if (condition.type === "jobLevel") {
-      const job = gameState.jobs[condition.jobId];
-      if (!job) return false;
-      const { level } = calculateLevelFromExp(job.exp);
-      return level >= condition.level;
-    } else if (condition.type === "stat") {
-      return playerStats[condition.stat] >= condition.value;
+    switch (condition.type) {
+      case "jobLevel": {
+        const job = gameState.jobs[condition.jobId];
+        if (!job) return false;
+        const { level } = calculateLevelFromExp(job.exp);
+        return level >= condition.level;
+      }
+      
+      case "stat": {
+        return playerStats[condition.stat] >= condition.value;
+      }
+      
+      case "totalJobLevels": {
+        const totalLevels = calculateTotalLevels(gameState);
+        return totalLevels >= condition.value;
+      }
+      
+      case "totalSkillLevels": {
+        const totalSkillLevels = calculateTotalSkillLevels(gameState);
+        return totalSkillLevels >= condition.value;
+      }
+      
+      case "abilityLevel": {
+        const ability = gameState.abilities[condition.abilityId];
+        if (!ability || !ability.unlocked) return false;
+        const { level } = calculateLevelFromExp(ability.exp);
+        return level >= condition.level;
+      }
+      
+      case "skillLevel": {
+        const skill = gameState.skills[condition.skillId];
+        if (!skill) return false;
+        const { level } = calculateLevelFromExp(skill.exp);
+        return level >= condition.level;
+      }
+      
+      case "bossDefeats": {
+        const bossProgress = gameState.bossProgress[condition.bossId];
+        if (!bossProgress) return false;
+        return bossProgress.defeated >= condition.count;
+      }
+      
+      case "anyJobFromList": {
+        return condition.jobIds.some(jobId => {
+          const job = gameState.jobs[jobId];
+          if (!job) return false;
+          const { level } = calculateLevelFromExp(job.exp);
+          return level >= condition.level;
+        });
+      }
+      
+      case "anyStat": {
+        return Object.values(playerStats).some(statValue => statValue >= condition.value);
+      }
+      
+      default:
+        return false;
     }
-    return false;
   });
 };
 
@@ -108,13 +157,59 @@ export const isSkillUnlocked = (
 
   // All conditions must be met
   return skillDef.unlockConditions.every((condition) => {
-    if (condition.type === "stat") {
-      return playerStats[condition.stat] >= condition.value;
-    } else if (condition.type === "skillTotalLevels") {
-      const totalSkillLevels = calculateTotalSkillLevels(gameState);
-      return totalSkillLevels >= condition.value;
+    switch (condition.type) {
+      case "stat": {
+        return playerStats[condition.stat] >= condition.value;
+      }
+      
+      case "skillTotalLevels": {
+        const totalSkillLevels = calculateTotalSkillLevels(gameState);
+        return totalSkillLevels >= condition.value;
+      }
+      
+      case "totalJobLevels": {
+        const totalLevels = calculateTotalLevels(gameState);
+        return totalLevels >= condition.value;
+      }
+      
+      case "totalSkillLevels": {
+        const totalSkillLevels = calculateTotalSkillLevels(gameState);
+        return totalSkillLevels >= condition.value;
+      }
+      
+      case "skillLevel": {
+        const skill = gameState.skills[condition.skillId];
+        if (!skill) return false;
+        const { level } = calculateLevelFromExp(skill.exp);
+        return level >= condition.level;
+      }
+      
+      case "bossDefeats": {
+        const bossProgress = gameState.bossProgress[condition.bossId];
+        if (!bossProgress) return false;
+        return bossProgress.defeated >= condition.count;
+      }
+      
+      case "anyJobFromList": {
+        return condition.jobIds.some(jobId => {
+          const job = gameState.jobs[jobId];
+          if (!job) return false;
+          const { level } = calculateLevelFromExp(job.exp);
+          return level >= condition.level;
+        });
+      }
+      
+      case "anyAbilityLevel": {
+        return Object.values(gameState.abilities).some(ability => {
+          if (!ability.unlocked) return false;
+          const { level } = calculateLevelFromExp(ability.exp);
+          return level >= condition.level;
+        });
+      }
+      
+      default:
+        return false;
     }
-    return false;
   });
 };
 

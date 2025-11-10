@@ -14,11 +14,13 @@ export const Sorcerer: JobDefinition = {
   traits: [TraitValue.Magical, TraitValue.DPS],
   statBonuses: [
     { stat: StatValue.INT, value: 3.5 },
-    { stat: StatValue.CRIT_D, value: 0.015 }, // +1.5% crit damage per level
+    { stat: StatValue.CRIT_D, value: 1.5 }, // +1.5% crit damage per level
+    { stat: StatValue.CRIT_C, value: 2.5 }, // Moderate crit chance scaling
     { stat: StatValue.CONC, value: 1.0 },
   ],
   unlockConditions: [
-    { type: "stat", stat: StatValue.INT, value: 20 },
+    { type: "stat", stat: StatValue.INT, value: 40 },
+    { type: "stat", stat: StatValue.CONC, value: 25 },
   ],
 };
 
@@ -51,8 +53,9 @@ export const Warlock: JobDefinition = {
     { stat: StatValue.CONC, value: 1.5 },
   ],
   unlockConditions: [
-    { type: "jobLevel", jobId: "Mage", level: 8 },
-    { type: "stat", stat: StatValue.FRT, value: 10 },
+    { type: "jobLevel", jobId: "Mage", level: 12 },
+    { type: "stat", stat: StatValue.FRT, value: 30 },
+    { type: "stat", stat: StatValue.INT, value: 25 },
   ],
 };
 

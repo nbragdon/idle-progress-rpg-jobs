@@ -10,7 +10,6 @@ import {
   HP_PER_CONSTITUTION,
   MIN_DAMAGE_PERCENT,
   MIN_HIT_CHANCE,
-  CRIT_REDUCTION_PER_DEFENSE,
   ABILITY_LEVEL_REDUCTION,
 } from "./constants";
 
@@ -73,18 +72,25 @@ export function calculateDamageReduction(
 }
 
 /**
- * Calculate final critical chance after defensive reduction
+ * Calculate final critical chance based on attacker crit vs defender defenses
  * Crit chance can go above 100% (guaranteed crits)
+ * Formula: When CRIT_C = 10x average defense, attacker has 100% crit chance
  */
 export function calculateCritChance(
   baseCritChance: number,
   defenderStats: PlayerStats
 ): number {
   const avgDefense = (defenderStats[StatValue.TGH] + defenderStats[StatValue.FRT]) / 2;
-  const reduction = avgDefense * CRIT_REDUCTION_PER_DEFENSE;
   
-  // Percentage reduction (can still go above 100%)
-  const finalCrit = baseCritChance * (1 - reduction);
+  // Prevent division by zero - if no defense, use crit chance directly
+  if (avgDefense === 0) {
+    return baseCritChance;
+  }
+  
+  // Linear scaling: CRIT_C / (10 * avgDefense) = crit chance
+  // When CRIT_C = 10x avgDefense → 100% crit
+  // When CRIT_C = 20x avgDefense → 200% crit (guaranteed)
+  const finalCrit = baseCritChance / (10 * avgDefense);
   
   return Math.max(0, finalCrit); // Can't go below 0%
 }
@@ -147,7 +153,8 @@ export function calculateDamage(
   const isCrit = Math.random() < critChance;
 
   if (isCrit) {
-    baseDamage *= attacker.stats[StatValue.CRIT_D];
+    // CRIT_D stored as percentage (e.g., 150 = 150% damage)
+    baseDamage *= (attacker.stats[StatValue.CRIT_D] / 100);
   }
 
   // Apply damage reduction

@@ -47,7 +47,7 @@ export const getInitialState = (): GameState => {
     if (!skillDef.unlockConditions || skillDef.unlockConditions.length === 0) {
       initialSkills[id] = {
         id: id,
-        exp: 100, // Starting skills start with 100 EXP (level 1)
+        exp: 0, // Skills start at level 0
         isActive: id === "PhysicalTraining" // Physical Training starts active
       };
     }

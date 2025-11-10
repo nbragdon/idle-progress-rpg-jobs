@@ -7,7 +7,7 @@ import { calculateLevelFromExp } from "./utils";
 
 // Constants from GameEngine
 const EXP_PER_SECOND = 10;
-const SKILL_EXP_PER_SECOND = 5;
+const SKILL_EXP_PER_SECOND = 25; // 5x faster for skills and abilities
 
 /**
  * Calculate exp per second for a specific job
