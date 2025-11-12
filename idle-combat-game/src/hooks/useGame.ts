@@ -10,10 +10,11 @@ import {
   getMaxActiveJobs,
   getMaxActiveSkills,
   getMaxActiveAbilities,
+  getMaxBattleAbilities,
 } from "../core/gameCalculations";
 import { FaBriefcase, FaGraduationCap, FaFistRaised, FaSkull, FaRedoAlt, FaCog } from "react-icons/fa";
 import type { TabId } from "./useGameUI";
-import type { BossDefinition } from "../types/data";
+import type { BossDefinition, AscensionUpgradeId } from "../types/data";
 
 interface TabDefinition {
   id: TabId;
@@ -70,6 +71,7 @@ export const useGame = () => {
     maxActiveJobs: getMaxActiveJobs(gameState),
     maxActiveSkills: getMaxActiveSkills(gameState),
     maxActiveAbilities: getMaxActiveAbilities(gameState),
+    maxBattleAbilities: getMaxBattleAbilities(gameState),
   }), [gameState]);
 
   const currentBossData: BossDefinition = useMemo(
@@ -120,13 +122,13 @@ export const useGame = () => {
   };
 
   const toggleAbilityBattle = (abilityId: string) => {
-    const success = engineToggleAbilityBattle(abilityId, maxLimits.maxActiveAbilities);
+    const success = engineToggleAbilityBattle(abilityId, maxLimits.maxBattleAbilities);
     if (!success && gameState.abilities[abilityId] && !gameState.abilities[abilityId].isActiveBattle) {
-      showAlert(`Cannot have more than ${maxLimits.maxActiveAbilities} abilities active in battle!`);
+      showAlert(`Cannot have more than ${maxLimits.maxBattleAbilities} abilities active in battle!`);
     }
   };
 
-  const buyAscensionUpgrade = (upgradeId: string, cost: number) => {
+  const buyAscensionUpgrade = (upgradeId: AscensionUpgradeId, cost: number) => {
     const success = engineBuyUpgrade(upgradeId, cost);
     if (!success) {
       showAlert("Not enough Ascension Points!");

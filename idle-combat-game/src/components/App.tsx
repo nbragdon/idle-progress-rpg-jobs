@@ -220,6 +220,7 @@ const App: React.FC = () => {
               <AbilitiesTab
                 abilities={gameState.abilities}
                 maxActiveAbilities={maxLimits.maxActiveAbilities}
+                maxBattleAbilities={maxLimits.maxBattleAbilities}
                 playerStats={playerStats}
                 gameState={gameState}
                 toggleAbilityTraining={toggleAbilityTraining}

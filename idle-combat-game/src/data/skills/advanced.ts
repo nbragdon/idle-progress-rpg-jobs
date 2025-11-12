@@ -5,9 +5,9 @@ import {
   GiSwordBrandish, 
   GiNinjaArmor, 
   GiChessKnight,
-  GiBookAura,
+  GiSpellBook,
   GiSkills,
-  GiTwoShadows
+  GiTwoCoins
 } from "react-icons/gi";
 import type { SkillDefinition } from "../../types/data";
 import { TraitValue } from "../../types/data";
@@ -80,7 +80,7 @@ export const VersatileWarrior: SkillDefinition = {
   id: "VersatileWarrior",
   name: "Versatile Warrior",
   description: "Increases EXP gain for DPS, Tank, and Aggressive jobs by 10% per level. For balanced fighters.",
-  icon: GiTwoShadows,
+  icon: GiTwoCoins,
   effects: [
     { type: "traitJobExp", trait: TraitValue.DPS, value: 0.10 },
     { type: "traitJobExp", trait: TraitValue.Tank, value: 0.10 },
@@ -112,7 +112,7 @@ export const ScholarlyPursuit: SkillDefinition = {
   id: "ScholarlyPursuit",
   name: "Scholarly Pursuit",
   description: "Increases EXP gain for ALL skills by 25% per level. Knowledge begets knowledge.",
-  icon: GiBookAura,
+  icon: GiSpellBook,
   effects: [
     { type: "skillExp", value: 0.25 },
   ],

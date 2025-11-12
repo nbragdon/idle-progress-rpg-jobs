@@ -5,6 +5,7 @@ import type {
   AscensionUpgradeDefinition,
   BossDefinition,
   DamageType,
+  ActiveStatusEffect,
 } from "./data";
 
 export type StatusEffectId = "Poison" | "Stun" | "Weakness";
@@ -32,6 +33,7 @@ export interface SkillState {
   id: string;
   exp: number;
   isActive: boolean;
+  lastActiveTime: number; // Timestamp for tracking when skill was last activated
 }
 
 export interface AbilityState {
@@ -96,6 +98,8 @@ export interface BattleState {
   playerMaxHp: number;
   playerStats: PlayerStats;
   playerAbilities: BattleAbilityState[];
+  playerStatusEffects: ActiveStatusEffect[];
+  playerShieldAmount: number; // Current shield HP
   
   // Boss state
   bossId: string;
@@ -104,6 +108,8 @@ export interface BattleState {
   bossMaxHp: number;
   bossStats: PlayerStats;
   bossAbilities: BattleAbilityState[];
+  bossStatusEffects: ActiveStatusEffect[];
+  bossShieldAmount: number; // Current shield HP
   
   // Battle log
   log: BattleLogEntry[];

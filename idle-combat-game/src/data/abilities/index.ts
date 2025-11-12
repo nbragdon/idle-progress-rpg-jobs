@@ -1,8 +1,8 @@
 // Abilities Data Registry
 // Central export for all ability definitions
 
-import { Smash, QuickStrike, ShieldBash } from "./physical";
-import { Beam, Fireball } from "./magical";
+import { Smash, BastionShield, Shadowstrike } from "./physical";
+import { Beam, CurseOfAgony } from "./magical";
 import type { AbilityDefinition } from "../../types/data";
 
 /**
@@ -21,12 +21,14 @@ import type { AbilityDefinition } from "../../types/data";
  * - Ultimate: High-power, long cooldown abilities (future)
  */
 export const ALL_ABILITIES: Record<string, AbilityDefinition> = {
-  Smash,       // Starter physical ability
-  Beam,        // Starter magical ability
-  QuickStrike,
-  ShieldBash,
-  Fireball,
-  // Future abilities will be added here
+  // Starter Abilities
+  Smash,         // Starter physical ability
+  Beam,          // Starter magical ability
+  
+  // Tier 1 Job Abilities
+  BastionShield,  // Guardian Level 20 - Shield buff
+  CurseOfAgony,   // Warlock Level 20 - Poison DoT
+  Shadowstrike,   // Shadow Level 20 - Stun attack
 };
 
 

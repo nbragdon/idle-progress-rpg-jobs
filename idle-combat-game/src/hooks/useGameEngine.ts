@@ -6,6 +6,7 @@ import { GameEngine } from "../game/GameEngine";
 import { getInitialState } from "../state/initialState";
 import { loadGame, saveGame } from "../state/persistence";
 import type { GameState } from "../types/game";
+import type { AscensionUpgradeId } from "../types/data";
 
 export const useGameEngine = () => {
   // Initialize game engine
@@ -128,7 +129,7 @@ export const useGameEngine = () => {
     return engine.toggleAbilityBattle(abilityId, maxBattleAbilities);
   }, [engine]);
 
-  const buyAscensionUpgrade = useCallback((upgradeId: string, cost: number) => {
+  const buyAscensionUpgrade = useCallback((upgradeId: AscensionUpgradeId, cost: number) => {
     return engine.buyAscensionUpgrade(upgradeId, cost);
   }, [engine]);
 

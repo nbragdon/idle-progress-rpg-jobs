@@ -48,8 +48,53 @@ export const TraitValue = {
 
 export type TraitType = typeof TraitValue[keyof typeof TraitValue];
 
-// --- Damage and Status Effect Types (NEW) ---
-export type StatusEffectId = "Poison" | "Stun" | "Weakness";
+// --- Status Effect Types (Value/Type Pattern) ---
+export const StatusEffectValue = {
+  Stun: "Stun",         // Stops enemy cooldowns from progressing
+  Poison: "Poison",     // Deals true damage over time
+  Disarm: "Disarm",     // Prevents physical abilities from firing
+  Silence: "Silence",   // Prevents magical abilities from firing
+  Shield: "Shield",     // Absorbs damage before HP
+  Weak: "Weak",         // Reduces damage dealt
+  Strong: "Strong",     // Increases damage dealt
+} as const;
+
+export type StatusEffectType = typeof StatusEffectValue[keyof typeof StatusEffectValue];
+
+// Legacy type for backwards compatibility
+export type StatusEffectId = StatusEffectType;
+
+/**
+ * Status Effect Configuration
+ * Defines the parameters for a status effect applied by an ability
+ */
+export interface StatusEffectConfig {
+  type: StatusEffectType;
+  
+  // Duration parameters (in seconds)
+  baseDuration: number;      // Duration at level 1
+  maxDuration: number;       // Duration at max level
+  
+  // Effect-specific parameters
+  baseValue?: number;        // Base value at level 1 (damage, percentage, shield amount)
+  maxValue?: number;         // Max value at max level
+  
+  // Damage over time specific (Poison)
+  tickRate?: number;         // How often damage is applied (seconds)
+}
+
+/**
+ * Active Status Effect on a Combatant
+ * Represents a status effect currently applied during battle
+ */
+export interface ActiveStatusEffect {
+  type: StatusEffectType;
+  duration: number;          // Remaining duration in seconds
+  value: number;             // Current value (damage per tick, percentage, shield amount)
+  tickRate?: number;         // For DoT effects
+  lastTick?: number;         // Last time damage was applied (for DoT)
+  source: "player" | "boss"; // Who applied the effect
+}
 
 export interface StatusEffectData {
   id: StatusEffectId;
@@ -61,6 +106,8 @@ export interface AbilityEffect {
   baseDamage: number; // Flat damage amount for the ability
   damageType: DamageType;
   statusEffect?: StatusEffectData;
+  // New status effect system
+  statusEffectConfig?: StatusEffectConfig;
 }
 // ---------------------------------------------
 
@@ -124,7 +171,17 @@ export interface AbilityDefinition {
   description: string;
   icon: IconType;
   cooldown: number; // Base cooldown in seconds
+  // Legacy single unlock condition (deprecated, use unlockConditions instead)
   unlockCondition: { stat: StatId; required: number };
+  // New flexible unlock conditions (same as jobs/skills)
+  unlockConditions?: Array<
+    | { type: "jobLevel"; jobId: string; level: number }
+    | { type: "stat"; stat: StatId; value: number }
+    | { type: "totalJobLevels"; value: number }
+    | { type: "abilityLevel"; abilityId: string; level: number }
+    | { type: "skillLevel"; skillId: string; level: number }
+    | { type: "bossDefeats"; bossId: string; count: number }
+  >;
   effects: AbilityEffect[];
   // Optional: Custom scaling for starter abilities
   damageScaling?: {
@@ -156,6 +213,9 @@ export const AscensionUpgradeIdValue = {
   maxSkills: "maxSkills",
   maxAbilities: "maxAbilities",
   maxActiveJobs: "maxActiveJobs",
+  maxActiveSkills: "maxActiveSkills",
+  maxActiveAbilities: "maxActiveAbilities",
+  maxBattleAbilities: "maxBattleAbilities",
 } as const;
 
 export type AscensionUpgradeId = typeof AscensionUpgradeIdValue[keyof typeof AscensionUpgradeIdValue];
@@ -167,4 +227,7 @@ export interface AscensionUpgradeDefinition {
   maxLevel: number;
   cost: (level: number) => number; // Function to calculate next cost
   effect: (level: number) => number; // Function to calculate next effect (for display)
+  unlockConditions?: Array<
+    | { type: "bossDefeats"; bossId: string; count: number }
+  >;
 }

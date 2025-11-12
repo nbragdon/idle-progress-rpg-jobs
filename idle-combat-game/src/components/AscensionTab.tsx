@@ -2,13 +2,14 @@
 
 import React from 'react';
 import type { GameState } from '../types/game';
-import type { AscensionUpgradeDefinition } from '../types/data';
+import type { AscensionUpgradeId } from '../types/data';
 import { ASCENSION_UPGRADES } from '../core/data';
-import { FaBolt, FaSyncAlt } from 'react-icons/fa';
+import { isAscensionUpgradeUnlocked } from '../core/utils';
+import { FaBolt, FaSyncAlt, FaLock } from 'react-icons/fa';
 
 interface AscensionTabProps {
   gameState: GameState;
-  buyAscensionUpgrade: (upgradeId: string, cost: number) => void;
+  buyAscensionUpgrade: (upgradeId: AscensionUpgradeId, cost: number) => void;
   ascend: () => void;
 }
 
@@ -90,7 +91,8 @@ const AscensionTab: React.FC<AscensionTabProps> = ({ gameState, buyAscensionUpgr
             const currentLevel = gameState.permanentUpgrades[upgrade.id] || 0;
             const cost = upgrade.cost(currentLevel);
             const isMaxLevel = currentLevel >= upgrade.maxLevel;
-            const canAfford = currentPoints >= cost;
+            const isUnlocked = isAscensionUpgradeUnlocked(upgrade, gameState);
+            const canAfford = currentPoints >= cost && isUnlocked;
             const currentEffect = currentLevel > 0 ? upgrade.effect(currentLevel) : 0;
             const nextEffect = upgrade.effect(currentLevel + 1);
 
@@ -98,7 +100,9 @@ const AscensionTab: React.FC<AscensionTabProps> = ({ gameState, buyAscensionUpgr
               <div
                 key={upgrade.id}
                 className={`rounded-xl p-5 transition-all ${
-                  isMaxLevel
+                  !isUnlocked
+                    ? "bg-slate-900/50 border border-slate-800/50 opacity-60"
+                    : isMaxLevel
                     ? "bg-amber-500/10 border border-amber-500/30"
                     : "bg-slate-800/50 border border-slate-700/50 hover:border-slate-600/50"
                 }`}
@@ -106,10 +110,16 @@ const AscensionTab: React.FC<AscensionTabProps> = ({ gameState, buyAscensionUpgr
                 <div className="flex items-start justify-between gap-4">
                   <div className="flex-1">
                     <div className="flex items-center gap-3 mb-2">
-                      <FaBolt className={`h-5 w-5 ${isMaxLevel ? "text-amber-400" : "text-purple-400"}`} />
+                      {!isUnlocked ? (
+                        <FaLock className="h-5 w-5 text-slate-600" />
+                      ) : (
+                        <FaBolt className={`h-5 w-5 ${isMaxLevel ? "text-amber-400" : "text-purple-400"}`} />
+                      )}
                       <h4 className="text-base font-semibold text-white">{upgrade.name}</h4>
                       <span className={`px-2.5 py-0.5 rounded-full text-xs font-semibold ${
-                        isMaxLevel
+                        !isUnlocked
+                          ? "bg-slate-800/50 text-slate-600"
+                          : isMaxLevel
                           ? "bg-amber-500/20 text-amber-400"
                           : "bg-slate-700/50 text-slate-400"
                       }`}>
@@ -117,6 +127,20 @@ const AscensionTab: React.FC<AscensionTabProps> = ({ gameState, buyAscensionUpgr
                       </span>
                     </div>
                     <p className="text-sm text-slate-400 mb-3">{upgrade.description}</p>
+                    {!isUnlocked && upgrade.unlockConditions && (
+                      <div className="mb-3 p-2 rounded-lg bg-slate-800/50 border border-slate-700/50">
+                        <p className="text-xs text-slate-500">
+                          🔒 Unlock requirement:{" "}
+                          {upgrade.unlockConditions.map((cond) => {
+                            if (cond.type === "bossDefeats") {
+                              const progress = gameState.bossProgress[cond.bossId]?.defeated || 0;
+                              return `Defeat ${cond.bossId.replace(/([A-Z])/g, ' $1').trim()} ${progress}/${cond.count} times`;
+                            }
+                            return "";
+                          }).join(", ")}
+                        </p>
+                      </div>
+                    )}
                     <div className="flex items-center gap-4 text-sm">
                       {currentLevel > 0 && (
                         <div>
@@ -124,7 +148,7 @@ const AscensionTab: React.FC<AscensionTabProps> = ({ gameState, buyAscensionUpgr
                           <span className="text-teal-400 font-semibold">+{currentEffect}x</span>
                         </div>
                       )}
-                      {!isMaxLevel && (
+                      {!isMaxLevel && isUnlocked && (
                         <div>
                           <span className="text-slate-500">Next: </span>
                           <span className="text-white font-semibold">+{nextEffect}x</span>

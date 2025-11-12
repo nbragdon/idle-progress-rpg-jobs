@@ -13,9 +13,6 @@ import {
   ASCENSION_UPGRADES,
   BOSS_DATA, // Added to find the correct initial boss ID
 } from "../core/data";
-import {
-  INITIAL_ABILITY_LEVEL,
-} from "../core/constants";
 import type { AscensionUpgradeDefinition } from "../types/data";
 
 // Dynamically determine the ID of the first boss
@@ -33,7 +30,7 @@ export const getInitialState = (): GameState => {
     if (!jobDef.unlockConditions || jobDef.unlockConditions.length === 0) {
       initialJobs[id] = {
         id: id,
-        exp: id === "Warrior" ? 100 : 0, // Warrior starts with 100 EXP (level 1)
+        exp: 0, // All jobs start at level 0
         isActive: id === "Warrior",
         lastActiveTime: now,
       };
@@ -48,7 +45,8 @@ export const getInitialState = (): GameState => {
       initialSkills[id] = {
         id: id,
         exp: 0, // Skills start at level 0
-        isActive: id === "PhysicalTraining" // Physical Training starts active
+        isActive: id === "PhysicalTraining", // Physical Training starts active
+        lastActiveTime: id === "PhysicalTraining" ? now : 0
       };
     }
   });
@@ -57,11 +55,15 @@ export const getInitialState = (): GameState => {
   const initialAbilities = Object.keys(ABILITY_DATA).reduce<
     Record<string, AbilityState>
   >((acc, id) => {
-    const isInitialUnlock = ABILITY_DATA[id].unlockCondition.required === 0;
+    const abilityDef = ABILITY_DATA[id];
+    // Only unlock if legacy condition is met AND there are no new unlock conditions
+    // This prevents abilities with job/skill level requirements from being auto-unlocked
+    const isInitialUnlock = abilityDef.unlockCondition.required === 0 && 
+                            (!abilityDef.unlockConditions || abilityDef.unlockConditions.length === 0);
     acc[id] = {
       id: id,
       unlocked: isInitialUnlock,
-      exp: isInitialUnlock ? INITIAL_ABILITY_LEVEL * 100 : 0, // Convert initial level to EXP
+      exp: 0, // All abilities start at level 0
       isTraining: id === "Smash", // Only Smash starts training (matches starter Warrior job)
       isActiveBattle: false, // Player must manually select abilities for battle
     };

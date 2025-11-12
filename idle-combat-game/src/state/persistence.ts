@@ -1,61 +1,103 @@
 // src/state/persistence.ts
+// Simple merge-based persistence: Always sync with current game data definitions
 
-// src/state/persistence.ts
 import type { GameState } from "../types/game";
 import { getInitialState } from "./initialState";
+import { JOB_DATA, SKILL_DATA, ABILITY_DATA } from "../core/data";
 
 export const loadGame = (): GameState => {
   try {
     const savedState = localStorage.getItem("incrementalGameSave");
     if (savedState) {
       const parsedState = JSON.parse(savedState);
-      const initialState = getInitialState(); // Type-safe merging and migration
+      const initialState = getInitialState();
       
-      // Merge saved jobs with initial jobs
+      // Validate basic structure
+      if (!parsedState || typeof parsedState !== 'object') {
+        console.warn("Invalid save file, starting fresh");
+        return getInitialState();
+      }
+      
+      // JOBS: Start with current game data, overlay player progress
       const mergedJobs = { ...initialState.jobs };
       if (parsedState.jobs) {
-        Object.entries(parsedState.jobs).forEach(([id, job]) => {
-          mergedJobs[id] = job as GameState["jobs"][string];
+        Object.keys(JOB_DATA).forEach(id => {
+          if (parsedState.jobs[id]) {
+            // Keep player progress for jobs that still exist
+            mergedJobs[id] = parsedState.jobs[id];
+          }
+          // New jobs automatically get initial state
         });
       }
       
-      // Merge saved skills with initial skills
+      // SKILLS: Start with current game data, overlay player progress
       const mergedSkills = { ...initialState.skills };
       if (parsedState.skills) {
-        Object.entries(parsedState.skills).forEach(([id, skill]) => {
-          mergedSkills[id] = skill as GameState["skills"][string];
+        Object.keys(SKILL_DATA).forEach(id => {
+          if (parsedState.skills[id]) {
+            const savedSkill = parsedState.skills[id];
+            // Keep player progress for skills that still exist
+            // Ensure new fields have defaults
+            mergedSkills[id] = {
+              ...savedSkill,
+              lastActiveTime: savedSkill.lastActiveTime ?? 0,
+            };
+          }
+          // New skills automatically get initial state
         });
       }
       
+      // ABILITIES: Start with current game data, overlay player progress
+      const mergedAbilities: GameState["abilities"] = {};
+      Object.keys(ABILITY_DATA).forEach(id => {
+        const savedAbility = parsedState.abilities?.[id];
+        if (savedAbility) {
+          // Keep player progress for abilities that still exist
+          mergedAbilities[id] = {
+            ...initialState.abilities[id],
+            ...savedAbility,
+            // Ensure boolean flags are set
+            unlocked: savedAbility.unlocked ?? initialState.abilities[id].unlocked,
+            isTraining: savedAbility.isTraining ?? false,
+            isActiveBattle: savedAbility.isActiveBattle ?? false,
+          };
+        } else {
+          // New abilities get initial state
+          mergedAbilities[id] = initialState.abilities[id];
+        }
+      });
+      
+      // Return merged state - ONLY include fields that exist in current GameState
+      // This ensures deprecated fields are automatically dropped
       return {
-        ...initialState,
-        ...parsedState,
+        // Core progression (already filtered to current game data)
         jobs: mergedJobs,
         skills: mergedSkills,
-        abilities: Object.keys(initialState.abilities).reduce((acc, id) => {
-          acc[id] = {
-            ...initialState.abilities[id],
-            ...parsedState.abilities?.[id],
-            isTraining:
-              parsedState.abilities?.[id]?.isTraining ??
-              initialState.abilities[id].isTraining,
-            isActiveBattle:
-              parsedState.abilities?.[id]?.isActiveBattle ??
-              initialState.abilities[id].isActiveBattle,
-          };
-          return acc;
-        }, {} as GameState["abilities"]),
+        abilities: mergedAbilities,
+        
+        // Currencies and permanent systems
+        gold: parsedState.gold ?? 0,
+        ascensionPoints: parsedState.ascensionPoints ?? 0,
+        potentialAscensionPoints: parsedState.potentialAscensionPoints ?? 0,
+        ascensionUnlocked: parsedState.ascensionUnlocked ?? false,
         permanentUpgrades: {
           ...initialState.permanentUpgrades,
           ...parsedState.permanentUpgrades,
         },
+        
+        // Boss progression
+        currentBossId: parsedState.currentBossId ?? initialState.currentBossId,
         bossProgress: {
           ...initialState.bossProgress,
           ...parsedState.bossProgress,
         },
-        potentialAscensionPoints: parsedState.potentialAscensionPoints ?? 0,
-        ascensionUnlocked: parsedState.ascensionUnlocked ?? false, // Persist through loads
-        battleState: null, // Never persist battle state
+        
+        // UI state
+        lastTickTime: parsedState.lastTickTime ?? Date.now(),
+        activeTab: parsedState.activeTab ?? "Jobs",
+        
+        // Battle state (never persisted)
+        battleState: null,
       } as GameState;
     }
   } catch (error) {
@@ -66,9 +108,16 @@ export const loadGame = (): GameState => {
 
 export const saveGame = (state: GameState): void => {
   try {
+    // Remove non-serializable data before saving
+    const saveData = {
+      ...state,
+      battleState: null, // Never persist active battles
+      lastSave: Date.now(), // Add timestamp for debugging
+    };
+    
     localStorage.setItem(
       "incrementalGameSave",
-      JSON.stringify({ ...state, lastSave: Date.now() })
+      JSON.stringify(saveData)
     );
   } catch (error) {
     console.error("Failed to save game state:", error);

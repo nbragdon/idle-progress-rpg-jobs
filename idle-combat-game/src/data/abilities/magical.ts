@@ -1,7 +1,7 @@
 // Magical Abilities - INT based attacks
 
-import { GiLightningSpanner, GiLightningTrio } from "react-icons/gi";
-import { DamageValue, type AbilityDefinition } from "../../types/data";
+import { GiLightningTrio, GiPoisonCloud } from "react-icons/gi";
+import { DamageValue, StatusEffectValue, type AbilityDefinition } from "../../types/data";
 import { StatValue } from "../../types/game";
 
 export const Beam: AbilityDefinition = {
@@ -27,14 +27,33 @@ export const Beam: AbilityDefinition = {
   },
 };
 
-export const Fireball: AbilityDefinition = {
-  id: "Fireball",
-  name: "Fireball",
-  description: "Hurls a powerful fiery projectile.",
-  icon: GiLightningSpanner,
-  cooldown: 8.0,
-  unlockCondition: { stat: StatValue.INT, required: 15 },
-  effects: [{ baseDamage: 40, damageType: DamageValue.Magic }],
+export const CurseOfAgony: AbilityDefinition = {
+  id: "CurseOfAgony",
+  name: "Curse of Agony",
+  description: "Channels forbidden dark magic that inflicts a lingering curse. Deals immediate damage and poisons the enemy, dealing true damage over time. Poison damage and duration increase with level. Requires Warlock Level 20.",
+  icon: GiPoisonCloud,
+  cooldown: 4.5,
+  unlockCondition: { 
+    stat: StatValue.INT, 
+    required: 0,  // Legacy - actual requirement in unlockConditions
+  },
+  unlockConditions: [
+    { type: "jobLevel", jobId: "Warlock", level: 20 },
+  ],
+  effects: [
+    {
+      baseDamage: 40,
+      damageType: DamageValue.Magic,
+      statusEffectConfig: {
+        type: StatusEffectValue.Poison,
+        baseDuration: 6.0,      // 6 seconds at level 1
+        maxDuration: 18.0,      // 18 seconds at level 100
+        baseValue: 8,           // 8 damage per second at level 1
+        maxValue: 60,           // 60 damage per second at level 100
+        tickRate: 1.0,          // Damage applied every 1 second
+      },
+    },
+  ],
   damageMultiplier: 0,
   statusEffect: undefined,
 };

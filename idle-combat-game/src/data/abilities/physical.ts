@@ -1,7 +1,7 @@
 // Physical Abilities - STR/DEX/AGI based attacks
 
-import { GiCrossedSwords, GiShieldImpact, GiPunch } from "react-icons/gi";
-import { DamageValue, type AbilityDefinition, type StatusEffectId } from "../../types/data";
+import { GiPunch, GiShieldReflect, GiNinjaStar } from "react-icons/gi";
+import { DamageValue, StatusEffectValue, type AbilityDefinition, type StatusEffectId } from "../../types/data";
 import { StatValue } from "../../types/game";
 
 export const Smash: AbilityDefinition = {
@@ -27,33 +27,57 @@ export const Smash: AbilityDefinition = {
   },
 };
 
-export const QuickStrike: AbilityDefinition = {
-  id: "QuickStrike",
-  name: "Quick Strike",
-  description: "A swift physical attack with extra power.",
-  icon: GiCrossedSwords,
+export const BastionShield: AbilityDefinition = {
+  id: "BastionShield",
+  name: "Bastion Shield",
+  description: "The Guardian's ultimate defensive ability. Conjures a magical shield that absorbs damage. Shield and duration increase with level. Requires Guardian Level 20.",
+  icon: GiShieldReflect,
   cooldown: 5.0,
-  unlockCondition: { stat: StatValue.STR, required: 10 },
-  effects: [{ baseDamage: 25, damageType: DamageValue.Physical }],
+  unlockCondition: { 
+    stat: StatValue.TGH, 
+    required: 0,  // Legacy - actual requirement in unlockConditions
+  },
+  unlockConditions: [
+    { type: "jobLevel", jobId: "Guardian", level: 20 },
+  ],
+  effects: [
+    {
+      baseDamage: 30,
+      damageType: DamageValue.Physical,
+      statusEffectConfig: {
+        type: StatusEffectValue.Shield,
+        baseDuration: 4.0,    // 4 seconds at level 1
+        maxDuration: 12.0,    // 12 seconds at level 100
+        baseValue: 100,       // 100 shield at level 1
+        maxValue: 800,        // 800 shield at level 100
+      },
+    },
+  ],
   damageMultiplier: 0,
   statusEffect: undefined,
 };
 
-export const ShieldBash: AbilityDefinition = {
-  id: "ShieldBash",
-  name: "Shield Bash",
-  description: "Physical bash that can Stun the target.",
-  icon: GiShieldImpact,
-  cooldown: 12.0,
-  unlockCondition: { stat: StatValue.TGH, required: 20 },
+export const Shadowstrike: AbilityDefinition = {
+  id: "Shadowstrike",
+  name: "Shadowstrike",
+  description: "A lightning-fast strike from the shadows that leaves enemies stunned. Damage and stun duration increase with level. Requires Shadow Level 20.",
+  icon: GiNinjaStar,
+  cooldown: 4.0,
+  unlockCondition: { 
+    stat: StatValue.AGI, 
+    required: 0,  // Legacy - actual requirement in unlockConditions
+  },
+  unlockConditions: [
+    { type: "jobLevel", jobId: "Shadow", level: 20 },
+  ],
   effects: [
     {
-      baseDamage: 15,
+      baseDamage: 60,
       damageType: DamageValue.Physical,
-      statusEffect: {
-        id: "Stun" as StatusEffectId,
-        duration: 2.0,
-        concentration: 20,
+      statusEffectConfig: {
+        type: StatusEffectValue.Stun,
+        baseDuration: 1.0,    // 1.0 second stun at level 1
+        maxDuration: 3.5,     // 3.5 second stun at level 100
       },
     },
   ],

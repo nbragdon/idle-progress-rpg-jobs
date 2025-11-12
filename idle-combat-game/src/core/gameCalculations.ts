@@ -19,18 +19,27 @@ export const getMaxActiveJobs = (state: GameState): number => {
 
 /**
  * Calculates the maximum number of skills the player can train.
- * It combines the base constant with the level of the 'maxSkills' permanent upgrade.
+ * It combines the base constant with the level of the 'maxActiveSkills' permanent upgrade.
  */
 export const getMaxActiveSkills = (state: GameState): number => {
-    const maxSkillsUpgradeLevel = state.permanentUpgrades[AscensionUpgradeIdValue.maxSkills] || 0;
+    const maxSkillsUpgradeLevel = state.permanentUpgrades[AscensionUpgradeIdValue.maxActiveSkills] || 0;
     return INITIAL_MAX_ACTIVE_SKILLS + maxSkillsUpgradeLevel;
 };
 
 /**
  * Calculates the maximum number of abilities the player can train.
- * It combines the base constant with the level of the 'maxAbilities' permanent upgrade.
+ * It combines the base constant with the level of the 'maxActiveAbilities' permanent upgrade.
  */
 export const getMaxActiveAbilities = (state: GameState): number => {
-    const maxAbilitiesUpgradeLevel = state.permanentUpgrades[AscensionUpgradeIdValue.maxAbilities] || 0;
+    const maxAbilitiesUpgradeLevel = state.permanentUpgrades[AscensionUpgradeIdValue.maxActiveAbilities] || 0;
     return INITIAL_MAX_ACTIVE_ABILITIES + maxAbilitiesUpgradeLevel;
+};
+
+/**
+ * Calculates the maximum number of abilities the player can use in battle.
+ * It combines the base constant with the level of the 'maxBattleAbilities' permanent upgrade.
+ */
+export const getMaxBattleAbilities = (state: GameState): number => {
+    const maxBattleUpgradeLevel = state.permanentUpgrades[AscensionUpgradeIdValue.maxBattleAbilities] || 0;
+    return INITIAL_MAX_ACTIVE_ABILITIES + maxBattleUpgradeLevel;
 };

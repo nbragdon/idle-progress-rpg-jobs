@@ -13,6 +13,7 @@ import { calculateAbilityExpPerSecond } from "../core/expCalculations";
 interface AbilitiesTabProps {
   abilities: GameState["abilities"];
   maxActiveAbilities: number;
+  maxBattleAbilities: number;
   playerStats: PlayerStats;
   gameState: GameState;
   toggleAbilityTraining: (abilityId: string) => void;
@@ -22,6 +23,7 @@ interface AbilitiesTabProps {
 const AbilitiesTab: React.FC<AbilitiesTabProps> = ({
   abilities,
   maxActiveAbilities,
+  maxBattleAbilities,
   playerStats,
   gameState,
   toggleAbilityTraining,
@@ -47,7 +49,7 @@ const AbilitiesTab: React.FC<AbilitiesTabProps> = ({
         <div>
           <h2 className="text-2xl sm:text-3xl font-bold text-white">Abilities</h2>
           <p className="text-sm sm:text-base text-white/70 mt-2">
-            {trainingCount} / {maxActiveAbilities} training • {battleCount} / {maxActiveAbilities} battle • Click for details
+            {trainingCount} / {maxActiveAbilities} training • {battleCount} / {maxBattleAbilities} battle • Click for details
           </p>
         </div>
       </div>
@@ -75,6 +77,9 @@ const AbilitiesTab: React.FC<AbilitiesTabProps> = ({
         {abilityIds.map((abilityId) => {
           const ability = abilities[abilityId];
           const data = ABILITY_DATA[abilityId] as AbilityDefinition;
+
+          // Skip if ability not yet initialized in state
+          if (!ability) return null;
 
           const isUnlocked = ability.unlocked;
           const conditionMet =

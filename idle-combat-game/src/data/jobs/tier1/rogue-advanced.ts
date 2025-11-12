@@ -13,9 +13,9 @@ export const Shadow: JobDefinition = {
   icon: GiDualityMask,
   traits: [TraitValue.Stealth, TraitValue.Swift],
   statBonuses: [
-    { stat: StatValue.AGI, value: 3.0 },
-    { stat: StatValue.DEX, value: 2.0 },
-    { stat: StatValue.CRIT_C, value: 5.0 }, // High crit chance scaling
+    { stat: StatValue.AGI, value: 4.0 },
+    { stat: StatValue.DEX, value: 2.5 },
+    { stat: StatValue.CRIT_C, value: 6.5 }, // High crit chance scaling
   ],
   unlockConditions: [
     { type: "jobLevel", jobId: "Rogue", level: 10 },
@@ -29,9 +29,9 @@ export const Thief: JobDefinition = {
   icon: GiMoneyStack,
   traits: [TraitValue.Opportunist, TraitValue.Swift],
   statBonuses: [
-    { stat: StatValue.DEX, value: 3.5 },
-    { stat: StatValue.CRIT_D, value: 2.0 }, // +2% crit damage per level
-    { stat: StatValue.CRIT_C, value: 3.0 }, // Moderate crit chance scaling
+    { stat: StatValue.DEX, value: 4.5 },
+    { stat: StatValue.CRIT_D, value: 2.5 }, // +2.5% crit damage per level
+    { stat: StatValue.CRIT_C, value: 4.0 }, // Moderate crit chance scaling
   ],
   unlockConditions: [
     { type: "stat", stat: StatValue.DEX, value: 40 },
@@ -46,10 +46,10 @@ export const Skirmisher: JobDefinition = {
   icon: GiNinjaHeroicStance,
   traits: [TraitValue.Skirmish, TraitValue.Swift],
   statBonuses: [
-    { stat: StatValue.AGI, value: 2.5 },
-    { stat: StatValue.DEX, value: 2.0 },
-    { stat: StatValue.CON, value: 2.0 },
-    { stat: StatValue.FRT, value: 1.5 },
+    { stat: StatValue.AGI, value: 3.5 },
+    { stat: StatValue.DEX, value: 2.5 },
+    { stat: StatValue.CON, value: 2.5 },
+    { stat: StatValue.FRT, value: 2.0 },
   ],
   unlockConditions: [
     { type: "jobLevel", jobId: "Rogue", level: 12 },

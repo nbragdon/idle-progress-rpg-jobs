@@ -174,16 +174,16 @@ export const BOSS_DATA: Record<string, BossDefinition> = {
     baseHp: 0, // HP now calculated from CON: 10 + (CON × 10)
     baseDamage: 250,
     stats: {
-      [StatValue.STR]: 500,
+      [StatValue.STR]: 400, // Average strength
       [StatValue.DEX]: 450,
-      [StatValue.AGI]: 450,
-      [StatValue.TGH]: 600,
-      [StatValue.CON]: 800, // 10 + (800 × 10) = 8010 HP (~10x Training Dummy)
+      [StatValue.AGI]: 600, // High dodge capability
+      [StatValue.TGH]: 600, // Strong against physical
+      [StatValue.CON]: 400, // 10 + (400 × 10) = 4010 HP (lower health)
       [StatValue.INT]: 450,
       [StatValue.FRT]: 600,
       [StatValue.CONC]: 500,
-      [StatValue.RES]: 500,
-      [StatValue.CRIT_C]: 3000, // ~10x Training Dummy
+      [StatValue.RES]: 300, // Weak to magic damage
+      [StatValue.CRIT_C]: 4000, // Higher crit chance
       [StatValue.CRIT_D]: 200, // 200% crit damage
     },
     ascensionPoints: 5,
@@ -277,5 +277,41 @@ export const ASCENSION_UPGRADES: AscensionUpgradeDefinition[] = [
     maxLevel: 10,
     cost: (lvl) => Math.pow(10, lvl), // 1, 10, 100, 1000, etc.
     effect: (lvl) => lvl * 5, // 5x per level
+  },
+  {
+    id: "maxBattleAbilities",
+    name: "Battle Ability Slots",
+    description: "Increases the number of abilities you can use in battle by 1 per level.",
+    maxLevel: 5,
+    cost: (_lvl) => 3, // Flat 3 AP cost
+    effect: (lvl) => lvl, // +1 slot per level
+    unlockConditions: [{ type: "bossDefeats", bossId: "TrainingDummy", count: 3 }],
+  },
+  {
+    id: "maxActiveJobs",
+    name: "Active Job Slots",
+    description: "Increases the number of jobs you can train simultaneously by 1 per level.",
+    maxLevel: 5,
+    cost: (_lvl) => 5, // Flat 5 AP cost
+    effect: (lvl) => lvl, // +1 slot per level
+    unlockConditions: [{ type: "bossDefeats", bossId: "TrainingDummy", count: 3 }],
+  },
+  {
+    id: "maxActiveSkills",
+    name: "Active Skill Slots",
+    description: "Increases the number of skills you can train simultaneously by 1 per level.",
+    maxLevel: 5,
+    cost: (_lvl) => 5, // Flat 5 AP cost
+    effect: (lvl) => lvl, // +1 slot per level
+    unlockConditions: [{ type: "bossDefeats", bossId: "TrainingDummy", count: 3 }],
+  },
+  {
+    id: "maxActiveAbilities",
+    name: "Training Ability Slots",
+    description: "Increases the number of abilities you can train simultaneously by 1 per level.",
+    maxLevel: 5,
+    cost: (_lvl) => 5, // Flat 5 AP cost
+    effect: (lvl) => lvl, // +1 slot per level
+    unlockConditions: [{ type: "bossDefeats", bossId: "TrainingDummy", count: 3 }],
   },
 ];

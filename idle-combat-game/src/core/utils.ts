@@ -1,7 +1,7 @@
 // src/core/utils.ts
 
 import { EXP_BASE, EXP_GROWTH_RATE } from "./constants";
-import type { JobDefinition, SkillDefinition } from "../types/data";
+import type { JobDefinition, SkillDefinition, AbilityDefinition } from "../types/data";
 import type { GameState, PlayerStats } from "../types/game";
 
 /** Calculates required experience for the next level. */
@@ -218,4 +218,98 @@ export const isSkillUnlocked = (
  */
 export const isSkillAvailable = (skillId: string, gameState: GameState): boolean => {
   return skillId in gameState.skills;
+};
+
+/**
+ * Checks if an ability's unlock conditions are met
+ * Supports both legacy unlockCondition and new unlockConditions
+ */
+export const isAbilityUnlocked = (
+  abilityDef: AbilityDefinition,
+  gameState: GameState,
+  playerStats: PlayerStats
+): boolean => {
+  // Check legacy unlock condition (single stat requirement)
+  const legacyConditionMet = playerStats[abilityDef.unlockCondition.stat] >= abilityDef.unlockCondition.required;
+  
+  // If no new unlock conditions, use legacy only
+  if (!abilityDef.unlockConditions || abilityDef.unlockConditions.length === 0) {
+    return legacyConditionMet;
+  }
+  
+  // If new unlock conditions exist, all must be met (in addition to legacy condition being met OR new conditions being sufficient)
+  const newConditionsMet = abilityDef.unlockConditions.every((condition) => {
+    switch (condition.type) {
+      case "jobLevel": {
+        const job = gameState.jobs[condition.jobId];
+        if (!job) return false;
+        const { level } = calculateLevelFromExp(job.exp);
+        return level >= condition.level;
+      }
+      
+      case "stat": {
+        return playerStats[condition.stat] >= condition.value;
+      }
+      
+      case "totalJobLevels": {
+        const totalLevels = calculateTotalLevels(gameState);
+        return totalLevels >= condition.value;
+      }
+      
+      case "abilityLevel": {
+        const ability = gameState.abilities[condition.abilityId];
+        if (!ability || !ability.unlocked) return false;
+        const { level } = calculateLevelFromExp(ability.exp);
+        return level >= condition.level;
+      }
+      
+      case "skillLevel": {
+        const skill = gameState.skills[condition.skillId];
+        if (!skill) return false;
+        const { level } = calculateLevelFromExp(skill.exp);
+        return level >= condition.level;
+      }
+      
+      case "bossDefeats": {
+        const bossProgress = gameState.bossProgress[condition.bossId];
+        if (!bossProgress) return false;
+        return bossProgress.defeated >= condition.count;
+      }
+      
+      default:
+        return false;
+    }
+  });
+  
+  return newConditionsMet;
+};
+
+/**
+ * Checks if an ability is available (unlocked in the game state)
+ */
+export const isAbilityAvailable = (abilityId: string, gameState: GameState): boolean => {
+  const ability = gameState.abilities[abilityId];
+  return ability && ability.unlocked;
+};
+
+/**
+ * Checks if an ascension upgrade is unlocked based on unlock conditions
+ */
+export const isAscensionUpgradeUnlocked = (
+  upgrade: { unlockConditions?: Array<{ type: "bossDefeats"; bossId: string; count: number }> },
+  gameState: GameState
+): boolean => {
+  // If no unlock conditions, it's always unlocked
+  if (!upgrade.unlockConditions || upgrade.unlockConditions.length === 0) {
+    return true;
+  }
+
+  // Check all conditions (AND logic - all must be met)
+  return upgrade.unlockConditions.every((condition) => {
+    if (condition.type === "bossDefeats") {
+      const progress = gameState.bossProgress[condition.bossId];
+      return progress && progress.defeated >= condition.count;
+    }
+    return false;
+  });
 };
