@@ -19,7 +19,7 @@ export const HP_PER_CONSTITUTION = 10; // Each point of CON adds 10 HP
 
 // Combat Formulas
 export const MIN_DAMAGE_PERCENT = 0.10; // Damage can't be reduced below 10%
-export const MIN_HIT_CHANCE = 0.10; // Hit chance can't go below 10%
+export const MIN_HIT_CHANCE = 0.05; // Hit chance can't go below 5% (updated from 10%)
 
 // Battle System
 export const BATTLE_TICK_RATE = 0.1; // Battle updates every 0.1 seconds

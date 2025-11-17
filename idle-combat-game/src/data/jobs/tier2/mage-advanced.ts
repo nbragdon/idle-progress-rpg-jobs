@@ -21,8 +21,7 @@ export const Archmage: JobDefinition = {
   unlockConditions: [
     { type: "jobLevel", jobId: "Wizard", level: 30 },
     { type: "jobLevel", jobId: "Sorcerer", level: 18 },
-    { type: "stat", stat: StatValue.INT, value: 120 },
-    { type: "stat", stat: StatValue.CONC, value: 96 },
+    // Both stat requirements removed - Wizard 30 + Sorcerer 18 already give 201 INT and 132 CONC
   ],
 };
 
@@ -41,8 +40,8 @@ export const Elementalist: JobDefinition = {
   unlockConditions: [
     { type: "jobLevel", jobId: "Sorcerer", level: 24 },
     { type: "abilityLevel", abilityId: "Beam", level: 36 },
-    { type: "stat", stat: StatValue.INT, value: 96 },
     { type: "bossDefeats", bossId: "TrainingDummy", count: 6 },
+    // INT requirement removed - Sorcerer 24 already gives 108 INT
   ],
 };
 

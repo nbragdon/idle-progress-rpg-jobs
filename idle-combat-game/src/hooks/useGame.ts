@@ -13,6 +13,7 @@ import {
   getMaxBattleAbilities,
 } from "../core/gameCalculations";
 import { FaBriefcase, FaGraduationCap, FaFistRaised, FaSkull, FaRedoAlt, FaCog } from "react-icons/fa";
+import { GiPathDistance } from "react-icons/gi";
 import type { TabId } from "./useGameUI";
 import type { BossDefinition, AscensionUpgradeId } from "../types/data";
 
@@ -40,6 +41,7 @@ export const useGame = () => {
     closeBattle: engineCloseBattle,
     calculatePlayerStats: engineCalculateStats,
     resetGame: engineResetGame,
+    selectPath: engineSelectPath,
   } = useGameEngine();
 
   // UI state
@@ -83,6 +85,11 @@ export const useGame = () => {
     // Ascension is visible once unlocked (first boss defeat) and stays visible through resets
     return gameState.ascensionUnlocked;
   }, [gameState.ascensionUnlocked]);
+  
+  const isPathsVisible = useMemo(() => {
+    // Paths are visible after 10 or more total ascensions
+    return gameState.pathState.totalAscensions >= 10;
+  }, [gameState.pathState.totalAscensions]);
 
   // Tab definitions
   const tabs: TabDefinition[] = useMemo(() => {
@@ -98,10 +105,15 @@ export const useGame = () => {
       baseTabs.push({ id: "Ascension", name: "Ascension", icon: FaRedoAlt });
     }
     
+    // Only add Paths tab if it's been unlocked
+    if (isPathsVisible) {
+      baseTabs.push({ id: "Paths", name: "Paths", icon: GiPathDistance });
+    }
+    
     baseTabs.push({ id: "Settings", name: "Settings", icon: FaCog });
     
     return baseTabs;
-  }, [isAscensionVisible]);
+  }, [isAscensionVisible, isPathsVisible]);
 
   // Wrapper functions that include limits
   const toggleJobActive = (jobId: string) => {
@@ -156,6 +168,15 @@ export const useGame = () => {
     engineResetGame();
     showAlert("Game reset successfully!");
   };
+  
+  const selectPath = (pathId: string) => {
+    const success = engineSelectPath(pathId);
+    if (success) {
+      showAlert(`Path selected! Bonuses will grow over the next hour.`);
+    } else {
+      showAlert("Cannot select path - you already have one selected!");
+    }
+  };
 
   return {
     // Game state
@@ -165,6 +186,7 @@ export const useGame = () => {
     maxLimits,
     currentBossData,
     isAscensionVisible,
+    isPathsVisible,
     
     // UI state
     activeTab,
@@ -182,6 +204,7 @@ export const useGame = () => {
     startBossBattle,
     closeBattle,
     resetGame,
+    selectPath,
   };
 };
 

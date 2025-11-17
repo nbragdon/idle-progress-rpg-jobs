@@ -21,8 +21,7 @@ export const Juggernaut: JobDefinition = {
   unlockConditions: [
     { type: "jobLevel", jobId: "Guardian", level: 18 },
     { type: "jobLevel", jobId: "Barbarian", level: 18 },
-    { type: "stat", stat: StatValue.CON, value: 72 },
-    { type: "stat", stat: StatValue.TGH, value: 72 },
+    // Removed TGH 72 - Guardian 18 gives 72, but Barbarian needs Warrior 14 (28 TGH), total = 100 TGH (redundant)
   ],
 };
 
@@ -41,8 +40,7 @@ export const Warlord: JobDefinition = {
   unlockConditions: [
     { type: "jobLevel", jobId: "Commander", level: 24 },
     { type: "totalJobLevels", value: 120 },
-    { type: "stat", stat: StatValue.INT, value: 60 },
-    { type: "stat", stat: StatValue.STR, value: 60 },
+    // Removed STR 60 - Commander needs Warrior 12 (36 STR) + Commander 24 (60 STR) = 96 STR total (redundant)
   ],
 };
 
@@ -61,8 +59,7 @@ export const Berserker: JobDefinition = {
   unlockConditions: [
     { type: "jobLevel", jobId: "Barbarian", level: 24 },
     { type: "bossDefeats", bossId: "TrainingDummy", count: 12 },
-    { type: "stat", stat: StatValue.STR, value: 96 },
-    { type: "stat", stat: StatValue.CRIT_D, value: 120 },
+    { type: "stat", stat: StatValue.CRIT_D, value: 120 }, // Barbarian 24 only gives 48 CRIT_D - meaningful crit damage requirement
   ],
 };
 

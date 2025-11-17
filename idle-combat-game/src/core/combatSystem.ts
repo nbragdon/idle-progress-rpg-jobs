@@ -36,15 +36,43 @@ export function calculateMaxHP(constitution: number): number {
 
 /**
  * Calculate hit chance based on attacker DEX and defender AGI
- * Uses diminishing returns formula with minimum 10% hit chance
+ * 
+ * Formula breakdown:
+ * - DEX >= AGI: 100% hit (no dodge if attacker's DEX matches or exceeds defender's AGI)
+ * - AGI = DEX: 75% hit (25% dodge)
+ * - AGI = 2x DEX: 20% hit (80% dodge)
+ * - AGI > 2x DEX: Logarithmic decay from 20% down to 5% minimum
+ * 
+ * The logarithmic decay means it takes exponentially more AGI advantage
+ * to approach the 5% minimum hit chance (95% dodge cap)
  */
 export function calculateHitChance(attackerDex: number, defenderAgi: number): number {
-  // Base hit chance with DEX vs AGI
-  // Formula: 100 / (100 + (defenderAgi - attackerDex))
-  const agiAdvantage = Math.max(0, defenderAgi - attackerDex);
-  const hitChance = 100 / (100 + agiAdvantage);
+  // Prevent division by zero
+  if (attackerDex <= 0) return 0.05; // 5% if attacker has no DEX
   
-  return Math.max(MIN_HIT_CHANCE, hitChance);
+  // Calculate AGI to DEX ratio
+  const ratio = defenderAgi / attackerDex;
+  
+  let hitChance: number;
+  
+  if (ratio < 1.0) {
+    // Attacker has higher DEX than defender's AGI - guaranteed hit
+    hitChance = 1.0; // 100%
+  } else if (ratio <= 2.0) {
+    // Linear interpolation from 75% (at ratio=1) to 20% (at ratio=2)
+    // Formula: 75 - 55 * (ratio - 1)
+    // At ratio=1.0: 75 - 55*0 = 75%
+    // At ratio=2.0: 75 - 55*1 = 20%
+    hitChance = 0.75 - 0.55 * (ratio - 1.0);
+  } else {
+    // Logarithmic decay from 20% down to 5% as ratio increases beyond 2x
+    // Formula: 5 + 15 / (1 + log10(1 + excess))
+    // This creates a curve that asymptotically approaches 5%
+    const excess = ratio - 2.0;
+    hitChance = 0.05 + 0.15 / (1.0 + Math.log10(1.0 + excess));
+  }
+  
+  return hitChance;
 }
 
 /**

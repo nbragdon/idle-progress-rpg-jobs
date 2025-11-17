@@ -7,32 +7,32 @@ Added four new ascension upgrades that allow players to increase their training 
 
 ### 1. Battle Ability Slots
 - **ID**: `maxBattleAbilities`
-- **Cost**: 3 AP (flat cost per level)
-- **Max Level**: 5
+- **Cost**: Progressive (Level 1: 3 AP, Level 2: 50 AP, Level 3: 300 AP)
+- **Max Level**: 3
 - **Effect**: +1 ability slot for battle per level
 - **Unlock Requirement**: Defeat Training Dummy 3 times
 - **Description**: "Increases the number of abilities you can use in battle by 1 per level."
 
 ### 2. Active Job Slots
 - **ID**: `maxActiveJobs`
-- **Cost**: 5 AP (flat cost per level)
-- **Max Level**: 5
+- **Cost**: Progressive (Level 1: 5 AP, Level 2: 30 AP, Level 3: 150 AP)
+- **Max Level**: 3
 - **Effect**: +1 job training slot per level
 - **Unlock Requirement**: Defeat Training Dummy 3 times
 - **Description**: "Increases the number of jobs you can train simultaneously by 1 per level."
 
 ### 3. Active Skill Slots
 - **ID**: `maxActiveSkills`
-- **Cost**: 5 AP (flat cost per level)
-- **Max Level**: 5
+- **Cost**: Progressive (Level 1: 5 AP, Level 2: 30 AP, Level 3: 150 AP)
+- **Max Level**: 3
 - **Effect**: +1 skill training slot per level
 - **Unlock Requirement**: Defeat Training Dummy 3 times
 - **Description**: "Increases the number of skills you can train simultaneously by 1 per level."
 
 ### 4. Training Ability Slots
 - **ID**: `maxActiveAbilities`
-- **Cost**: 5 AP (flat cost per level)
-- **Max Level**: 5
+- **Cost**: Progressive (Level 1: 5 AP, Level 2: 30 AP, Level 3: 150 AP)
+- **Max Level**: 3
 - **Effect**: +1 ability training slot per level
 - **Unlock Requirement**: Defeat Training Dummy 3 times
 - **Description**: "Increases the number of abilities you can train simultaneously by 1 per level."
@@ -81,17 +81,17 @@ Added four new ascension upgrades that allow players to increase their training 
 - All slots start at 1 (unchanged)
 
 ### Maximum Capacity
-- Jobs: 6 total (1 base + 5 from upgrades)
-- Skills: 6 total (1 base + 5 from upgrades)
-- Training Abilities: 6 total (1 base + 5 from upgrades)
-- Battle Abilities: 6 total (1 base + 5 from upgrades)
+- Jobs: 4 total (1 base + 3 from upgrades)
+- Skills: 4 total (1 base + 3 from upgrades)
+- Training Abilities: 4 total (1 base + 3 from upgrades)
+- Battle Abilities: 4 total (1 base + 3 from upgrades)
 
 ### Upgrade Costs
-- **Battle Abilities**: 3 AP × 5 levels = 15 AP total
-- **Jobs**: 5 AP × 5 levels = 25 AP total
-- **Skills**: 5 AP × 5 levels = 25 AP total
-- **Training Abilities**: 5 AP × 5 levels = 25 AP total
-- **Grand Total**: 90 AP to max all slot upgrades
+- **Battle Abilities**: 3 + 50 + 300 = 353 AP total (3 levels)
+- **Jobs**: 5 + 30 + 150 = 185 AP total (3 levels)
+- **Skills**: 5 + 30 + 150 = 185 AP total (3 levels)
+- **Training Abilities**: 5 + 30 + 150 = 185 AP total (3 levels)
+- **Grand Total**: 908 AP to max all slot upgrades
 
 ## Unlock Progression
 1. Player must defeat Training Dummy 3 times to see any slot upgrades

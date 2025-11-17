@@ -30,7 +30,7 @@ export const Beam: AbilityDefinition = {
 export const CurseOfAgony: AbilityDefinition = {
   id: "CurseOfAgony",
   name: "Curse of Agony",
-  description: "Channels forbidden dark magic that inflicts a lingering curse. Deals immediate damage and poisons the enemy, dealing true damage over time. Poison damage and duration increase with level. Requires Warlock Level 20.",
+  description: "Channels forbidden dark magic that inflicts a lingering curse. Deals immediate damage and poisons the enemy, dealing true damage over time. All effects increase with level. Requires Warlock Level 20.",
   icon: GiPoisonCloud,
   cooldown: 4.5,
   unlockCondition: { 
@@ -47,15 +47,26 @@ export const CurseOfAgony: AbilityDefinition = {
       statusEffectConfig: {
         type: StatusEffectValue.Poison,
         baseDuration: 6.0,      // 6 seconds at level 1
-        maxDuration: 18.0,      // 18 seconds at level 100
-        baseValue: 8,           // 8 damage per second at level 1
-        maxValue: 60,           // 60 damage per second at level 100
+        maxDuration: 20.0,      // 20 seconds at level 100
+        baseValue: 10,          // 10 damage per second at level 1
+        maxValue: 80,           // 80 damage per second at level 100
         tickRate: 1.0,          // Damage applied every 1 second
       },
     },
   ],
   damageMultiplier: 0,
   statusEffect: undefined,
+  // Advanced ability scaling (unlocked at job level 20)
+  damageScaling: {
+    type: "percentage",
+    value: 0.08, // 8% per level - strong initial + DoT
+  },
+  cooldownScaling: {
+    type: "flat",
+    reductionPerLevels: 0.15,
+    levelsPerReduction: 10,
+    minCooldown: 2.0,
+  },
 };
 
 

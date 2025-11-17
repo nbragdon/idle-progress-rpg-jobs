@@ -98,6 +98,13 @@ export const loadGame = (): GameState => {
         
         // Battle state (never persisted)
         battleState: null,
+        
+        // Paths system
+        pathState: {
+          selectedPathId: parsedState.pathState?.selectedPathId ?? null,
+          selectionTime: parsedState.pathState?.selectionTime ?? 0,
+          totalAscensions: parsedState.pathState?.totalAscensions ?? 0,
+        },
       } as GameState;
     }
   } catch (error) {

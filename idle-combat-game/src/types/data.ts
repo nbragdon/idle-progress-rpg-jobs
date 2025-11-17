@@ -231,3 +231,28 @@ export interface AscensionUpgradeDefinition {
     | { type: "bossDefeats"; bossId: string; count: number }
   >;
 }
+
+// --- Path Types ---
+
+export const PathIdValue = {
+  Mage: "Mage",
+  Warrior: "Warrior",
+  Rogue: "Rogue",
+} as const;
+
+export type PathId = typeof PathIdValue[keyof typeof PathIdValue];
+
+export interface PathEffect {
+  type: "traitJobExp" | "jobExp" | "skillExp" | "abilityExp";
+  trait?: TraitType; // Only for traitJobExp
+  baseValue: number; // Starting multiplier (e.g., 2.0 for 2x)
+  maxValue: number; // Max multiplier after 1 hour (e.g., 4.0 for 4x)
+}
+
+export interface PathDefinition {
+  id: PathId;
+  name: string;
+  description: string;
+  icon: IconType;
+  effects: PathEffect[];
+}

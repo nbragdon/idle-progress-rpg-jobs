@@ -22,7 +22,8 @@ export const Spellblade: JobDefinition = {
     { type: "anyJobFromList", jobIds: ["Guardian", "Barbarian", "Commander"], level: 18 },
     { type: "anyJobFromList", jobIds: ["Wizard", "Sorcerer", "Warlock"], level: 18 },
     { type: "stat", stat: StatValue.STR, value: 60 },
-    { type: "stat", stat: StatValue.INT, value: 60 },
+    // INT removed: Min path Wizard 18 (Mage 10 + Wizard 18 = 102 INT) - redundant
+    // STR kept: Guardian path only gives 30 STR from Warrior 10 prereq, need 60 (meaningful)
   ],
 };
 
@@ -61,8 +62,8 @@ export const ShadowDancer: JobDefinition = {
   unlockConditions: [
     { type: "anyJobFromList", jobIds: ["Shadow", "Thief", "Skirmisher"], level: 24 },
     { type: "anyJobFromList", jobIds: ["Wizard", "Sorcerer", "Warlock"], level: 18 },
-    { type: "stat", stat: StatValue.AGI, value: 84 },
-    { type: "stat", stat: StatValue.INT, value: 72 },
+    // AGI removed: Min rogue path Shadow 24 (Rogue 10 + Shadow 24 = 116 AGI) - redundant
+    // INT removed: Min mage path Wizard 18 (Mage 10 + Wizard 18 = 102 INT) - redundant
   ],
 };
 

@@ -84,7 +84,7 @@ const AscensionTab: React.FC<AscensionTabProps> = ({ gameState, buyAscensionUpgr
       <div>
         <h3 className="text-lg font-semibold text-white mb-4">Permanent Upgrades</h3>
         <p className="text-sm text-slate-400 mb-4">
-          Each upgrade multiplies EXP gain by 5x. Click to view details.
+          Spend AP to increase EXP multipliers or unlock additional training slots.
         </p>
         <div className="grid grid-cols-1 gap-3">
           {ASCENSION_UPGRADES.map(upgrade => {
@@ -95,6 +95,10 @@ const AscensionTab: React.FC<AscensionTabProps> = ({ gameState, buyAscensionUpgr
             const canAfford = currentPoints >= cost && isUnlocked;
             const currentEffect = currentLevel > 0 ? upgrade.effect(currentLevel) : 0;
             const nextEffect = upgrade.effect(currentLevel + 1);
+            
+            // Check if this is a slot upgrade (additive) or multiplier upgrade
+            const isSlotUpgrade = ['maxBattleAbilities', 'maxActiveJobs', 'maxActiveSkills', 'maxActiveAbilities'].includes(upgrade.id);
+            const effectSuffix = isSlotUpgrade ? '' : 'x';
 
             return (
               <div
@@ -145,13 +149,13 @@ const AscensionTab: React.FC<AscensionTabProps> = ({ gameState, buyAscensionUpgr
                       {currentLevel > 0 && (
                         <div>
                           <span className="text-slate-500">Current: </span>
-                          <span className="text-teal-400 font-semibold">+{currentEffect}x</span>
+                          <span className="text-teal-400 font-semibold">+{currentEffect}{effectSuffix}</span>
                         </div>
                       )}
                       {!isMaxLevel && isUnlocked && (
                         <div>
                           <span className="text-slate-500">Next: </span>
-                          <span className="text-white font-semibold">+{nextEffect}x</span>
+                          <span className="text-white font-semibold">+{nextEffect}{effectSuffix}</span>
                         </div>
                       )}
                     </div>

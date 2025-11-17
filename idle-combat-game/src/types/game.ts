@@ -123,6 +123,14 @@ export interface BattleState {
   };
 }
 
+// --- Path State ---
+
+export interface PathState {
+  selectedPathId: string | null; // null if no path selected
+  selectionTime: number; // Timestamp when path was selected (for growth calculation)
+  totalAscensions: number; // Total number of ascensions completed (persists through resets)
+}
+
 // --- Main Game State ---
 
 export interface GameState {
@@ -142,8 +150,11 @@ export interface GameState {
   currentBossId: BossDefinition["id"];
   bossProgress: Record<BossDefinition["id"], BossProgress>; // Tracks defeats per boss
   lastTickTime: number;
-  activeTab: "Jobs" | "Stats" | "Skills" | "Abilities" | "Boss" | "Ascension";
+  activeTab: "Jobs" | "Stats" | "Skills" | "Abilities" | "Boss" | "Ascension" | "Paths";
   
   // Active Battle
   battleState: BattleState | null;
+  
+  // Paths System
+  pathState: PathState;
 }

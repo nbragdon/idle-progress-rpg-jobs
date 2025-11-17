@@ -30,7 +30,7 @@ export const Smash: AbilityDefinition = {
 export const BastionShield: AbilityDefinition = {
   id: "BastionShield",
   name: "Bastion Shield",
-  description: "The Guardian's ultimate defensive ability. Conjures a magical shield that absorbs damage. Shield and duration increase with level. Requires Guardian Level 20.",
+  description: "The Guardian's ultimate defensive ability. Conjures a magical shield that absorbs damage. Damage, shield strength, and duration all increase with level. Requires Guardian Level 20.",
   icon: GiShieldReflect,
   cooldown: 5.0,
   unlockCondition: { 
@@ -47,14 +47,25 @@ export const BastionShield: AbilityDefinition = {
       statusEffectConfig: {
         type: StatusEffectValue.Shield,
         baseDuration: 4.0,    // 4 seconds at level 1
-        maxDuration: 12.0,    // 12 seconds at level 100
+        maxDuration: 14.0,    // 14 seconds at level 100
         baseValue: 100,       // 100 shield at level 1
-        maxValue: 800,        // 800 shield at level 100
+        maxValue: 1000,       // 1000 shield at level 100
       },
     },
   ],
   damageMultiplier: 0,
   statusEffect: undefined,
+  // Advanced ability scaling (unlocked at job level 20)
+  damageScaling: {
+    type: "percentage",
+    value: 0.08, // 8% per level - better than starters
+  },
+  cooldownScaling: {
+    type: "flat",
+    reductionPerLevels: 0.15,
+    levelsPerReduction: 10,
+    minCooldown: 2.0,
+  },
 };
 
 export const Shadowstrike: AbilityDefinition = {
@@ -77,12 +88,23 @@ export const Shadowstrike: AbilityDefinition = {
       statusEffectConfig: {
         type: StatusEffectValue.Stun,
         baseDuration: 1.0,    // 1.0 second stun at level 1
-        maxDuration: 3.5,     // 3.5 second stun at level 100
+        maxDuration: 4.5,     // 4.5 second stun at level 100
       },
     },
   ],
   damageMultiplier: 0,
   statusEffect: undefined,
+  // Advanced ability scaling (unlocked at job level 20)
+  damageScaling: {
+    type: "percentage",
+    value: 0.07, // 7% per level - high base damage + CC
+  },
+  cooldownScaling: {
+    type: "flat",
+    reductionPerLevels: 0.12,
+    levelsPerReduction: 10,
+    minCooldown: 1.5,
+  },
 };
 
 

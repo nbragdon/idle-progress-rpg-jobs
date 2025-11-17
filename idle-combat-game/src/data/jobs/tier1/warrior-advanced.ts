@@ -54,8 +54,7 @@ export const Commander: JobDefinition = {
   ],
   unlockConditions: [
     { type: "jobLevel", jobId: "Warrior", level: 12 },
-    { type: "stat", stat: StatValue.INT, value: 30 },
-    { type: "stat", stat: StatValue.STR, value: 25 },
+    { type: "stat", stat: StatValue.INT, value: 30 }, // Warrior gives 0 INT - meaningful requirement
   ],
 };
 

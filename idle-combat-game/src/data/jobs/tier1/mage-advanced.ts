@@ -54,8 +54,7 @@ export const Warlock: JobDefinition = {
   ],
   unlockConditions: [
     { type: "jobLevel", jobId: "Mage", level: 12 },
-    { type: "stat", stat: StatValue.FRT, value: 30 },
-    { type: "stat", stat: StatValue.INT, value: 25 },
+    { type: "stat", stat: StatValue.FRT, value: 30 }, // Mage gives 0 FRT - meaningful requirement
   ],
 };
 

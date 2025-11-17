@@ -2,7 +2,7 @@
 // Pure game logic - no React dependencies
 
 import type { GameState, PlayerStats, JobState, SkillState, BattleState } from "../types/game";
-import { JOB_DATA, SKILL_DATA, ABILITY_DATA, BOSS_DATA } from "../core/data";
+import { JOB_DATA, SKILL_DATA, ABILITY_DATA, BOSS_DATA, PATH_DATA } from "../core/data";
 import { 
   calculateLevelFromExp, 
   isJobUnlocked, 
@@ -13,12 +13,13 @@ import {
   isAbilityAvailable
 } from "../core/utils";
 import { StatValue } from "../types/game";
-import type { DamageType, AscensionUpgradeId } from "../types/data";
+import type { DamageType, AscensionUpgradeId, PathEffect } from "../types/data";
 import { DamageValue, StatusEffectValue } from "../types/data";
 import { 
   calculateMaxHP,
   calculateDamageReduction,
   calculateCritChance,
+  calculateHitChance,
   getEffectiveCooldown,
   getEffectiveBaseDamage
 } from "../core/combatSystem";
@@ -34,6 +35,22 @@ import {
   addOrRefreshStatusEffect,
 } from "../core/statusEffects";
 import { getInitialState } from "../state/initialState";
+
+// --- Path Helper Functions ---
+
+const PATH_GROWTH_TIME_MS = 60 * 60 * 1000; // 1 hour in milliseconds
+
+/**
+ * Calculate the current multiplier for a path effect based on time elapsed
+ * Linear growth from baseValue to maxValue over 1 hour
+ */
+function calculatePathMultiplier(effect: PathEffect, selectionTime: number, currentTime: number): number {
+  const elapsedTime = currentTime - selectionTime;
+  const growthProgress = Math.min(1, elapsedTime / PATH_GROWTH_TIME_MS);
+  
+  // Linear interpolation between base and max
+  return effect.baseValue + (effect.maxValue - effect.baseValue) * growthProgress;
+}
 
 export class GameEngine {
   private state: GameState;
@@ -110,7 +127,8 @@ export class GameEngine {
     const abilityExpMultiplier = 1 + (abilityExpLevel * 5);
     
     let hasChanges = false;
-    const newState = { ...this.state, lastTickTime: Date.now() };
+    const now = Date.now();
+    const newState = { ...this.state, lastTickTime: now };
 
     // Calculate skill bonuses - ALL skills apply regardless of training status
     const skillBonuses: Record<string, number> = {}; // trait -> bonus multiplier
@@ -133,22 +151,63 @@ export class GameEngine {
         });
       }
     });
+    
+    // Calculate path bonuses
+    const pathBonuses: {
+      traitJobExp: Record<string, number>;
+      jobExp: number;
+      skillExp: number;
+      abilityExp: number;
+    } = {
+      traitJobExp: {},
+      jobExp: 0,
+      skillExp: 0,
+      abilityExp: 0,
+    };
+    
+    if (this.state.pathState.selectedPathId) {
+      const pathDef = PATH_DATA[this.state.pathState.selectedPathId];
+      if (pathDef) {
+        pathDef.effects.forEach(effect => {
+          const multiplier = calculatePathMultiplier(effect, this.state.pathState.selectionTime, now);
+          
+          if (effect.type === "traitJobExp" && effect.trait) {
+            pathBonuses.traitJobExp[effect.trait] = multiplier;
+          } else if (effect.type === "jobExp") {
+            pathBonuses.jobExp = multiplier;
+          } else if (effect.type === "skillExp") {
+            pathBonuses.skillExp = multiplier;
+          } else if (effect.type === "abilityExp") {
+            pathBonuses.abilityExp = multiplier;
+          }
+        });
+      }
+    }
 
-    // Grant EXP to active jobs (with trait bonuses)
+    // Grant EXP to active jobs (with trait bonuses and path bonuses)
     const updatedJobs = { ...newState.jobs };
     Object.keys(updatedJobs).forEach((jobId) => {
       const job = updatedJobs[jobId];
       if (job.isActive) {
         let expMultiplier = 1.0;
         
-        // Apply trait-based bonuses
+        // Apply trait-based bonuses from skills
         const jobDef = JOB_DATA[jobId];
         if (jobDef && jobDef.traits) {
           jobDef.traits.forEach(trait => {
             if (skillBonuses[trait]) {
               expMultiplier += skillBonuses[trait];
             }
+            // Apply path trait bonuses (multiplicative)
+            if (pathBonuses.traitJobExp[trait]) {
+              expMultiplier *= pathBonuses.traitJobExp[trait];
+            }
           });
+        }
+        
+        // Apply global job exp path bonus (multiplicative)
+        if (pathBonuses.jobExp > 0) {
+          expMultiplier *= pathBonuses.jobExp;
         }
         
         const expGain = EXP_PER_SECOND * deltaTime * expMultiplier * jobExpMultiplier;
@@ -157,24 +216,36 @@ export class GameEngine {
       }
     });
 
-    // Grant EXP to active skills (with global skill EXP bonus and ascension multiplier)
+    // Grant EXP to active skills (with global skill EXP bonus, path bonus, and ascension multiplier)
     const updatedSkills = { ...newState.skills };
     Object.keys(updatedSkills).forEach((skillId) => {
       const skill = updatedSkills[skillId];
       if (skill.isActive) {
-        const expMultiplier = 1.0 + globalSkillExpBonus;
+        let expMultiplier = 1.0 + globalSkillExpBonus;
+        
+        // Apply path skill exp bonus (multiplicative)
+        if (pathBonuses.skillExp > 0) {
+          expMultiplier *= pathBonuses.skillExp;
+        }
+        
         const expGain = SKILL_EXP_PER_SECOND * deltaTime * expMultiplier * skillExpMultiplier;
         updatedSkills[skillId] = { ...skill, exp: skill.exp + expGain };
         hasChanges = true;
       }
     });
 
-    // Grant EXP to training abilities (with skill bonus and ascension multiplier)
+    // Grant EXP to training abilities (with skill bonus, path bonus, and ascension multiplier)
     const updatedAbilities = { ...newState.abilities };
     Object.keys(updatedAbilities).forEach((abilityId) => {
       const ability = updatedAbilities[abilityId];
       if (ability.isTraining && ability.unlocked) {
-        const expMultiplier = 1.0 + globalAbilityExpBonus;
+        let expMultiplier = 1.0 + globalAbilityExpBonus;
+        
+        // Apply path ability exp bonus (multiplicative)
+        if (pathBonuses.abilityExp > 0) {
+          expMultiplier *= pathBonuses.abilityExp;
+        }
+        
         const expGain = SKILL_EXP_PER_SECOND * deltaTime * expMultiplier * abilityExpMultiplier;
         updatedAbilities[abilityId] = { ...ability, exp: ability.exp + expGain };
         hasChanges = true;
@@ -460,12 +531,40 @@ export class GameEngine {
     return true;
   }
 
+  // Select a path
+  selectPath(pathId: string): boolean {
+    // Check if path exists
+    if (!PATH_DATA[pathId]) {
+      return false;
+    }
+    
+    // Check if a path is already selected
+    if (this.state.pathState.selectedPathId !== null) {
+      return false;
+    }
+    
+    // Select the path
+    this.setState({
+      ...this.state,
+      pathState: {
+        ...this.state.pathState,
+        selectedPathId: pathId,
+        selectionTime: Date.now(),
+      },
+    });
+    
+    return true;
+  }
+
   // Ascend (reset with ascension points)
   ascend(): void {
     // Convert potential points to actual points
     const newAscensionPoints = this.state.ascensionPoints + this.state.potentialAscensionPoints;
     
-    // Keep permanent upgrades, actual AP, ascension unlock status, and boss progress
+    // Increment total ascensions
+    const newTotalAscensions = this.state.pathState.totalAscensions + 1;
+    
+    // Keep permanent upgrades, actual AP, ascension unlock status, boss progress, and total ascensions
     const initialState = getInitialState();
     
     this.setState({
@@ -475,6 +574,11 @@ export class GameEngine {
       permanentUpgrades: { ...this.state.permanentUpgrades },
       ascensionUnlocked: this.state.ascensionUnlocked, // Keep unlocked through resets
       bossProgress: { ...this.state.bossProgress }, // Keep boss defeat counts for unlocks
+      pathState: {
+        selectedPathId: null, // Reset path selection
+        selectionTime: 0,
+        totalAscensions: newTotalAscensions, // Keep and increment total ascensions
+      },
     });
   }
 
@@ -676,115 +780,124 @@ export class GameEngine {
         const effectiveBaseDamage = getEffectiveBaseDamage(abilityData, ability.level);
         
         // Calculate base damage
-        let damage = this.calculateBattleDamage(
+        const { damage, isCrit, didHit } = this.calculateBattleDamage(
           battleState.playerStats,
           battleState.bossStats,
           effectiveBaseDamage,
           ability.damageType
         );
         
-        // Apply Weak/Strong modifiers
-        const damageModifier = getDamageModifier(battleState.playerStatusEffects);
-        damage *= damageModifier;
-        
-        // Apply damage (shield absorbs first for boss)
-        const finalDamage = Math.round(damage);
-        if (battleState.bossShieldAmount > 0) {
-          const shieldDamage = Math.min(battleState.bossShieldAmount, finalDamage);
-          const hpDamage = finalDamage - shieldDamage;
-          battleState.bossShieldAmount -= shieldDamage;
-          battleState.bossHp = Math.max(0, battleState.bossHp - hpDamage);
-          
+        if (!didHit) {
+          // Attack missed
           battleState.log.push({
             time: battleState.battleTime,
-            message: `Player uses ${ability.name}: ${shieldDamage} shield + ${hpDamage} damage`,
+            message: `Player's ${ability.name} missed!`,
             type: "player",
           });
         } else {
-          battleState.bossHp = Math.max(0, battleState.bossHp - finalDamage);
-          battleState.log.push({
-            time: battleState.battleTime,
-            message: `Player uses ${ability.name}: ${finalDamage} damage`,
-            type: "player",
-          });
-        }
-        
-        // Apply status effects from ability
-        if (abilityData.effects[0].statusEffectConfig) {
-          const statusEffect = createActiveStatusEffect(
-            abilityData.effects[0].statusEffectConfig,
-            ability.level,
-            "player",
-            battleState.battleTime
-          );
+          // Apply Weak/Strong modifiers
+          const damageModifier = getDamageModifier(battleState.playerStatusEffects);
+          let finalDamage = Math.round(damage * damageModifier);
           
-          // Shield applies to self (player)
-          if (statusEffect.type === StatusEffectValue.Shield) {
-            battleState.playerStatusEffects = addOrRefreshStatusEffect(
-              battleState.playerStatusEffects,
-              statusEffect
-            );
-            battleState.playerShieldAmount += statusEffect.value;
+          // Apply damage (shield absorbs first for boss)
+          const critText = isCrit ? " CRITICAL!" : "";
+          if (battleState.bossShieldAmount > 0) {
+            const shieldDamage = Math.min(battleState.bossShieldAmount, finalDamage);
+            const hpDamage = finalDamage - shieldDamage;
+            battleState.bossShieldAmount -= shieldDamage;
+            battleState.bossHp = Math.max(0, battleState.bossHp - hpDamage);
+            
             battleState.log.push({
               time: battleState.battleTime,
-              message: `Player gains ${Math.round(statusEffect.value)} shield for ${statusEffect.duration.toFixed(1)}s`,
+              message: `Player uses ${ability.name}: ${shieldDamage} shield + ${hpDamage} damage${critText}`,
+              type: "player",
+            });
+          } else {
+            battleState.bossHp = Math.max(0, battleState.bossHp - finalDamage);
+            battleState.log.push({
+              time: battleState.battleTime,
+              message: `Player uses ${ability.name}: ${finalDamage} damage${critText}`,
               type: "player",
             });
           }
-          // Strong applies to self (player)
-          else if (statusEffect.type === StatusEffectValue.Strong) {
-            battleState.playerStatusEffects = addOrRefreshStatusEffect(
-              battleState.playerStatusEffects,
-              statusEffect
-            );
-            battleState.log.push({
-              time: battleState.battleTime,
-              message: `Player gains ${statusEffect.value.toFixed(0)}% damage boost for ${statusEffect.duration.toFixed(1)}s`,
-              type: "player",
-            });
-          }
-          // All other effects apply to boss
-          else {
-            battleState.bossStatusEffects = addOrRefreshStatusEffect(
-              battleState.bossStatusEffects,
-              statusEffect
+          
+          // Apply status effects from ability (only on hit)
+          if (abilityData.effects[0].statusEffectConfig) {
+            const statusEffect = createActiveStatusEffect(
+              abilityData.effects[0].statusEffectConfig,
+              ability.level,
+              "player",
+              battleState.battleTime
             );
             
-            let effectMsg = "";
-            switch (statusEffect.type) {
-              case StatusEffectValue.Stun:
-                effectMsg = `Stunned for ${statusEffect.duration.toFixed(1)}s`;
-                break;
-              case StatusEffectValue.Poison:
-                effectMsg = `Poisoned (${Math.round(statusEffect.value)} dmg/s) for ${statusEffect.duration.toFixed(1)}s`;
-                break;
-              case StatusEffectValue.Disarm:
-                effectMsg = `Disarmed for ${statusEffect.duration.toFixed(1)}s`;
-                break;
-              case StatusEffectValue.Silence:
-                effectMsg = `Silenced for ${statusEffect.duration.toFixed(1)}s`;
-                break;
-              case StatusEffectValue.Weak:
-                effectMsg = `Weakened (${statusEffect.value.toFixed(0)}% less damage) for ${statusEffect.duration.toFixed(1)}s`;
-                break;
+            // Shield applies to self (player)
+            if (statusEffect.type === StatusEffectValue.Shield) {
+              battleState.playerStatusEffects = addOrRefreshStatusEffect(
+                battleState.playerStatusEffects,
+                statusEffect
+              );
+              battleState.playerShieldAmount += statusEffect.value;
+              battleState.log.push({
+                time: battleState.battleTime,
+                message: `Player gains ${Math.round(statusEffect.value)} shield for ${statusEffect.duration.toFixed(1)}s`,
+                type: "player",
+              });
             }
-            
-            battleState.log.push({
-              time: battleState.battleTime,
-              message: `${battleState.bossName} ${effectMsg}`,
-              type: "player",
-            });
+            // Strong applies to self (player)
+            else if (statusEffect.type === StatusEffectValue.Strong) {
+              battleState.playerStatusEffects = addOrRefreshStatusEffect(
+                battleState.playerStatusEffects,
+                statusEffect
+              );
+              battleState.log.push({
+                time: battleState.battleTime,
+                message: `Player gains ${statusEffect.value.toFixed(0)}% damage boost for ${statusEffect.duration.toFixed(1)}s`,
+                type: "player",
+              });
+            }
+            // All other effects apply to boss
+            else {
+              battleState.bossStatusEffects = addOrRefreshStatusEffect(
+                battleState.bossStatusEffects,
+                statusEffect
+              );
+              
+              let effectMsg = "";
+              switch (statusEffect.type) {
+                case StatusEffectValue.Stun:
+                  effectMsg = `Stunned for ${statusEffect.duration.toFixed(1)}s`;
+                  break;
+                case StatusEffectValue.Poison:
+                  effectMsg = `Poisoned (${Math.round(statusEffect.value)} dmg/s) for ${statusEffect.duration.toFixed(1)}s`;
+                  break;
+                case StatusEffectValue.Disarm:
+                  effectMsg = `Disarmed for ${statusEffect.duration.toFixed(1)}s`;
+                  break;
+                case StatusEffectValue.Silence:
+                  effectMsg = `Silenced for ${statusEffect.duration.toFixed(1)}s`;
+                  break;
+                case StatusEffectValue.Weak:
+                  effectMsg = `Weakened (${statusEffect.value.toFixed(0)}% less damage) for ${statusEffect.duration.toFixed(1)}s`;
+                  break;
+              }
+              
+              battleState.log.push({
+                time: battleState.battleTime,
+                message: `${battleState.bossName} ${effectMsg}`,
+                type: "player",
+              });
+            }
+          }
+          
+          // Check if boss defeated
+          if (battleState.bossHp <= 0) {
+            this.endBattle(true);
+            return;
           }
         }
         
         // Reset cooldown
         ability.cooldown = ability.maxCooldown;
-        
-        // Check if boss defeated
-        if (battleState.bossHp <= 0) {
-          this.endBattle(true);
-          return;
-        }
       }
     }
     
@@ -822,115 +935,124 @@ export class GameEngine {
         const effectiveBaseDamage = getEffectiveBaseDamage(bossData.bossAbility, ability.level);
         
         // Calculate base damage
-        let damage = this.calculateBattleDamage(
+        const { damage, isCrit, didHit } = this.calculateBattleDamage(
           battleState.bossStats,
           battleState.playerStats,
           effectiveBaseDamage,
           ability.damageType
         );
         
-        // Apply Weak/Strong modifiers
-        const damageModifier = getDamageModifier(battleState.bossStatusEffects);
-        damage *= damageModifier;
-        
-        // Apply damage (shield absorbs first for player)
-        const finalDamage = Math.round(damage);
-        if (battleState.playerShieldAmount > 0) {
-          const shieldDamage = Math.min(battleState.playerShieldAmount, finalDamage);
-          const hpDamage = finalDamage - shieldDamage;
-          battleState.playerShieldAmount -= shieldDamage;
-          battleState.playerHp = Math.max(0, battleState.playerHp - hpDamage);
-          
+        if (!didHit) {
+          // Attack missed
           battleState.log.push({
             time: battleState.battleTime,
-            message: `${battleState.bossName} uses ${ability.name}: ${shieldDamage} shield + ${hpDamage} damage`,
+            message: `${battleState.bossName}'s ${ability.name} missed!`,
             type: "boss",
           });
         } else {
-          battleState.playerHp = Math.max(0, battleState.playerHp - finalDamage);
-          battleState.log.push({
-            time: battleState.battleTime,
-            message: `${battleState.bossName} uses ${ability.name}: ${finalDamage} damage`,
-            type: "boss",
-          });
-        }
-        
-        // Apply status effects from boss ability (bossData already declared above)
-        if (bossData.bossAbility.effects[0].statusEffectConfig) {
-          const statusEffect = createActiveStatusEffect(
-            bossData.bossAbility.effects[0].statusEffectConfig,
-            ability.level,
-            "boss",
-            battleState.battleTime
-          );
+          // Apply Weak/Strong modifiers
+          const damageModifier = getDamageModifier(battleState.bossStatusEffects);
+          let finalDamage = Math.round(damage * damageModifier);
           
-          // Shield applies to self (boss)
-          if (statusEffect.type === StatusEffectValue.Shield) {
-            battleState.bossStatusEffects = addOrRefreshStatusEffect(
-              battleState.bossStatusEffects,
-              statusEffect
-            );
-            battleState.bossShieldAmount += statusEffect.value;
+          // Apply damage (shield absorbs first for player)
+          const critText = isCrit ? " CRITICAL!" : "";
+          if (battleState.playerShieldAmount > 0) {
+            const shieldDamage = Math.min(battleState.playerShieldAmount, finalDamage);
+            const hpDamage = finalDamage - shieldDamage;
+            battleState.playerShieldAmount -= shieldDamage;
+            battleState.playerHp = Math.max(0, battleState.playerHp - hpDamage);
+            
             battleState.log.push({
               time: battleState.battleTime,
-              message: `${battleState.bossName} gains ${Math.round(statusEffect.value)} shield for ${statusEffect.duration.toFixed(1)}s`,
+              message: `${battleState.bossName} uses ${ability.name}: ${shieldDamage} shield + ${hpDamage} damage${critText}`,
+              type: "boss",
+            });
+          } else {
+            battleState.playerHp = Math.max(0, battleState.playerHp - finalDamage);
+            battleState.log.push({
+              time: battleState.battleTime,
+              message: `${battleState.bossName} uses ${ability.name}: ${finalDamage} damage${critText}`,
               type: "boss",
             });
           }
-          // Strong applies to self (boss)
-          else if (statusEffect.type === StatusEffectValue.Strong) {
-            battleState.bossStatusEffects = addOrRefreshStatusEffect(
-              battleState.bossStatusEffects,
-              statusEffect
-            );
-            battleState.log.push({
-              time: battleState.battleTime,
-              message: `${battleState.bossName} gains ${statusEffect.value.toFixed(0)}% damage boost for ${statusEffect.duration.toFixed(1)}s`,
-              type: "boss",
-            });
-          }
-          // All other effects apply to player
-          else {
-            battleState.playerStatusEffects = addOrRefreshStatusEffect(
-              battleState.playerStatusEffects,
-              statusEffect
+          
+          // Apply status effects from boss ability (only on hit)
+          if (bossData.bossAbility.effects[0].statusEffectConfig) {
+            const statusEffect = createActiveStatusEffect(
+              bossData.bossAbility.effects[0].statusEffectConfig,
+              ability.level,
+              "boss",
+              battleState.battleTime
             );
             
-            let effectMsg = "";
-            switch (statusEffect.type) {
-              case StatusEffectValue.Stun:
-                effectMsg = `Stunned for ${statusEffect.duration.toFixed(1)}s`;
-                break;
-              case StatusEffectValue.Poison:
-                effectMsg = `Poisoned (${Math.round(statusEffect.value)} dmg/s) for ${statusEffect.duration.toFixed(1)}s`;
-                break;
-              case StatusEffectValue.Disarm:
-                effectMsg = `Disarmed for ${statusEffect.duration.toFixed(1)}s`;
-                break;
-              case StatusEffectValue.Silence:
-                effectMsg = `Silenced for ${statusEffect.duration.toFixed(1)}s`;
-                break;
-              case StatusEffectValue.Weak:
-                effectMsg = `Weakened (${statusEffect.value.toFixed(0)}% less damage) for ${statusEffect.duration.toFixed(1)}s`;
-                break;
+            // Shield applies to self (boss)
+            if (statusEffect.type === StatusEffectValue.Shield) {
+              battleState.bossStatusEffects = addOrRefreshStatusEffect(
+                battleState.bossStatusEffects,
+                statusEffect
+              );
+              battleState.bossShieldAmount += statusEffect.value;
+              battleState.log.push({
+                time: battleState.battleTime,
+                message: `${battleState.bossName} gains ${Math.round(statusEffect.value)} shield for ${statusEffect.duration.toFixed(1)}s`,
+                type: "boss",
+              });
             }
-            
-            battleState.log.push({
-              time: battleState.battleTime,
-              message: `Player ${effectMsg}`,
-              type: "boss",
-            });
+            // Strong applies to self (boss)
+            else if (statusEffect.type === StatusEffectValue.Strong) {
+              battleState.bossStatusEffects = addOrRefreshStatusEffect(
+                battleState.bossStatusEffects,
+                statusEffect
+              );
+              battleState.log.push({
+                time: battleState.battleTime,
+                message: `${battleState.bossName} gains ${statusEffect.value.toFixed(0)}% damage boost for ${statusEffect.duration.toFixed(1)}s`,
+                type: "boss",
+              });
+            }
+            // All other effects apply to player
+            else {
+              battleState.playerStatusEffects = addOrRefreshStatusEffect(
+                battleState.playerStatusEffects,
+                statusEffect
+              );
+              
+              let effectMsg = "";
+              switch (statusEffect.type) {
+                case StatusEffectValue.Stun:
+                  effectMsg = `Stunned for ${statusEffect.duration.toFixed(1)}s`;
+                  break;
+                case StatusEffectValue.Poison:
+                  effectMsg = `Poisoned (${Math.round(statusEffect.value)} dmg/s) for ${statusEffect.duration.toFixed(1)}s`;
+                  break;
+                case StatusEffectValue.Disarm:
+                  effectMsg = `Disarmed for ${statusEffect.duration.toFixed(1)}s`;
+                  break;
+                case StatusEffectValue.Silence:
+                  effectMsg = `Silenced for ${statusEffect.duration.toFixed(1)}s`;
+                  break;
+                case StatusEffectValue.Weak:
+                  effectMsg = `Weakened (${statusEffect.value.toFixed(0)}% less damage) for ${statusEffect.duration.toFixed(1)}s`;
+                  break;
+              }
+              
+              battleState.log.push({
+                time: battleState.battleTime,
+                message: `Player ${effectMsg}`,
+                type: "boss",
+              });
+            }
+          }
+          
+          // Check if player defeated
+          if (battleState.playerHp <= 0) {
+            this.endBattle(false);
+            return;
           }
         }
         
         // Reset cooldown
         ability.cooldown = ability.maxCooldown;
-        
-        // Check if player defeated
-        if (battleState.playerHp <= 0) {
-          this.endBattle(false);
-          return;
-        }
       }
     }
     
@@ -947,7 +1069,18 @@ export class GameEngine {
     defenderStats: PlayerStats,
     baseDamage: number,
     damageType: DamageType
-  ): number {
+  ): { damage: number; isCrit: boolean; didHit: boolean } {
+    // Check if attack hits
+    const hitChance = calculateHitChance(
+      attackerStats[StatValue.DEX],
+      defenderStats[StatValue.AGI]
+    );
+    const didHit = Math.random() < hitChance;
+    
+    if (!didHit) {
+      return { damage: 0, isCrit: false, didHit: false };
+    }
+    
     // Get relevant stat
     const attackStat = damageType === DamageValue.Physical
       ? attackerStats[StatValue.STR]
@@ -959,7 +1092,9 @@ export class GameEngine {
     
     // Apply crit
     const critChance = calculateCritChance(attackerStats[StatValue.CRIT_C], defenderStats);
-    if (Math.random() < critChance) {
+    const isCrit = Math.random() < critChance;
+    
+    if (isCrit) {
       // CRIT_D stored as percentage (e.g., 150 = 150% damage)
       damage *= (attackerStats[StatValue.CRIT_D] / 100);
     }
@@ -970,7 +1105,7 @@ export class GameEngine {
       damage *= reduction;
     }
     
-    return Math.ceil(damage);
+    return { damage: Math.ceil(damage), isCrit, didHit: true };
   }
   
   // End battle and award rewards

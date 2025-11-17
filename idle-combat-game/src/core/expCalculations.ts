@@ -2,8 +2,18 @@
 // Helper functions to calculate exp per second for display
 
 import type { GameState } from "../types/game";
-import { JOB_DATA, SKILL_DATA } from "./data";
+import { JOB_DATA, SKILL_DATA, PATH_DATA } from "./data";
 import { calculateLevelFromExp } from "./utils";
+import type { PathEffect } from "../types/data";
+
+// Path growth calculation helper
+const PATH_GROWTH_TIME_MS = 60 * 60 * 1000; // 1 hour in milliseconds
+
+function calculatePathMultiplier(effect: PathEffect, selectionTime: number, currentTime: number): number {
+  const elapsedTime = currentTime - selectionTime;
+  const growthProgress = Math.min(1, elapsedTime / PATH_GROWTH_TIME_MS);
+  return effect.baseValue + (effect.maxValue - effect.baseValue) * growthProgress;
+}
 
 // Constants from GameEngine
 const EXP_PER_SECOND = 10;
@@ -47,6 +57,23 @@ export function calculateJobExpPerSecond(jobId: string, gameState: GameState): n
       }
     });
   }
+  
+  // Apply path bonuses
+  if (gameState.pathState.selectedPathId) {
+    const pathDef = PATH_DATA[gameState.pathState.selectedPathId];
+    if (pathDef) {
+      const now = Date.now();
+      pathDef.effects.forEach(effect => {
+        if (effect.type === "traitJobExp" && effect.trait && jobDef?.traits.includes(effect.trait)) {
+          const multiplier = calculatePathMultiplier(effect, gameState.pathState.selectionTime, now);
+          expMultiplier *= multiplier;
+        } else if (effect.type === "jobExp") {
+          const multiplier = calculatePathMultiplier(effect, gameState.pathState.selectionTime, now);
+          expMultiplier *= multiplier;
+        }
+      });
+    }
+  }
 
   return EXP_PER_SECOND * expMultiplier * jobExpMultiplier;
 }
@@ -78,7 +105,22 @@ export function calculateSkillExpPerSecond(skillId: string, gameState: GameState
     }
   });
 
-  const expMultiplier = 1.0 + globalSkillExpBonus;
+  let expMultiplier = 1.0 + globalSkillExpBonus;
+  
+  // Apply path bonuses
+  if (gameState.pathState.selectedPathId) {
+    const pathDef = PATH_DATA[gameState.pathState.selectedPathId];
+    if (pathDef) {
+      const now = Date.now();
+      pathDef.effects.forEach(effect => {
+        if (effect.type === "skillExp") {
+          const multiplier = calculatePathMultiplier(effect, gameState.pathState.selectionTime, now);
+          expMultiplier *= multiplier;
+        }
+      });
+    }
+  }
+  
   return SKILL_EXP_PER_SECOND * expMultiplier * skillExpMultiplier;
 }
 
@@ -95,6 +137,37 @@ export function calculateAbilityExpPerSecond(abilityId: string, gameState: GameS
   const abilityExpLevel = gameState.permanentUpgrades.maxAbilities || 0;
   const abilityExpMultiplier = 1 + (abilityExpLevel * 5);
 
-  return SKILL_EXP_PER_SECOND * abilityExpMultiplier;
+  // Calculate global ability exp bonus - ALL skills apply regardless of training status
+  let globalAbilityExpBonus = 0;
+  Object.entries(gameState.skills).forEach(([id, s]) => {
+    const skillDef = SKILL_DATA[id];
+    const { level } = calculateLevelFromExp(s.exp);
+    
+    if (skillDef && level > 0) {
+      skillDef.effects.forEach(effect => {
+        if (effect.type === "abilityExp") {
+          globalAbilityExpBonus += effect.value * level;
+        }
+      });
+    }
+  });
+
+  let expMultiplier = 1.0 + globalAbilityExpBonus;
+  
+  // Apply path bonuses
+  if (gameState.pathState.selectedPathId) {
+    const pathDef = PATH_DATA[gameState.pathState.selectedPathId];
+    if (pathDef) {
+      const now = Date.now();
+      pathDef.effects.forEach(effect => {
+        if (effect.type === "abilityExp") {
+          const multiplier = calculatePathMultiplier(effect, gameState.pathState.selectionTime, now);
+          expMultiplier *= multiplier;
+        }
+      });
+    }
+  }
+
+  return SKILL_EXP_PER_SECOND * expMultiplier * abilityExpMultiplier;
 }
 

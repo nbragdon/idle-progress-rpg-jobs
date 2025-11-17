@@ -100,6 +100,13 @@ export const getInitialState = (): GameState => {
     
     // Battle State
     battleState: null,
+    
+    // Paths System
+    pathState: {
+      selectedPathId: null,
+      selectionTime: 0,
+      totalAscensions: 0,
+    },
 
     // Removed extraneous properties: version, lastSave, maxActiveJobs, maxActiveSkills, maxActiveAbilities
   };

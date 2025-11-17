@@ -128,129 +128,17 @@ import { ALL_ABILITIES } from "../data/abilities";
 
 export const ABILITY_DATA: Record<string, AbilityDefinition> = ALL_ABILITIES;
 
-// --- BOSSES (UPDATED STRUCTURE) ---
-export const BOSS_DATA: Record<string, BossDefinition> = {
-  TrainingDummy: {
-    id: "TrainingDummy",
-    name: "Training Dummy",
-    baseHp: 0, // HP now calculated from CON: 10 + (CON × 10)
-    baseDamage: 25,
-    stats: {
-      [StatValue.STR]: 50,
-      [StatValue.DEX]: 45,
-      [StatValue.AGI]: 45,
-      [StatValue.TGH]: 60,
-      [StatValue.CON]: 80, // 10 + (80 × 10) = 810 HP
-      [StatValue.INT]: 45,
-      [StatValue.FRT]: 60,
-      [StatValue.CONC]: 50,
-      [StatValue.RES]: 50,
-      [StatValue.CRIT_C]: 300, // Moderate crit chance vs player defenses
-      [StatValue.CRIT_D]: 175, // 175% crit damage
-    },
-    ascensionPoints: 1,
-    nextBoss: "GoblinKing",
-    bossAbility: {
-      name: "Wobble",
-      cooldown: 3.5,
-      // Added mandatory damageType field for AbilityEffect consistency
-      effects: [{ baseDamage: 25, damageType: DamageValue.Physical }],
-      id: "",
-      description: "",
-      icon: function (_props: IconBaseProps): React.ReactNode {
-        throw new Error("Function not implemented.");
-      },
-      unlockCondition: {
-        stat: StatValue.INT,
-        required: 0
-      },
-      damageMultiplier: 0,
-      statusEffect: undefined
-    },
-  },
-  GoblinKing: {
-    id: "GoblinKing",
-    name: "Goblin King",
-    baseHp: 0, // HP now calculated from CON: 10 + (CON × 10)
-    baseDamage: 250,
-    stats: {
-      [StatValue.STR]: 400, // Average strength
-      [StatValue.DEX]: 450,
-      [StatValue.AGI]: 600, // High dodge capability
-      [StatValue.TGH]: 600, // Strong against physical
-      [StatValue.CON]: 400, // 10 + (400 × 10) = 4010 HP (lower health)
-      [StatValue.INT]: 450,
-      [StatValue.FRT]: 600,
-      [StatValue.CONC]: 500,
-      [StatValue.RES]: 300, // Weak to magic damage
-      [StatValue.CRIT_C]: 4000, // Higher crit chance
-      [StatValue.CRIT_D]: 200, // 200% crit damage
-    },
-    ascensionPoints: 5,
-    nextBoss: "AncientDragon",
-    bossAbility: {
-      name: "Vicious Strike",
-      cooldown: 3.0,
-      // Converted existing boss ability to use the new AbilityEffect interface
-      effects: [{
-        baseDamage: 250,
-        damageType: DamageValue.Physical, // Defaulting to Physical for a strike
-        statusEffect: {
-          id: "Weakness" as StatusEffectId, duration: 5.0,
-          concentration: 0
-        },
-      }],
-      id: "",
-      description: "",
-      icon: function (_props: IconBaseProps): React.ReactNode {
-        throw new Error("Function not implemented.");
-      },
-      unlockCondition: {
-        stat: StatValue.INT,
-        required: 0
-      },
-      damageMultiplier: 0,
-      statusEffect: undefined
-    },
-  },
-  AncientDragon: {
-    id: "AncientDragon",
-    name: "Ancient Dragon",
-    baseHp: 0, // HP now calculated from CON: 10 + (CON × 10)
-    baseDamage: 2500,
-    stats: {
-      [StatValue.STR]: 5000,
-      [StatValue.DEX]: 4500,
-      [StatValue.AGI]: 4500,
-      [StatValue.TGH]: 6000,
-      [StatValue.CON]: 8000, // 10 + (8000 × 10) = 80,010 HP (~10x Goblin King)
-      [StatValue.INT]: 4500,
-      [StatValue.FRT]: 6000,
-      [StatValue.CONC]: 5000,
-      [StatValue.RES]: 5000,
-      [StatValue.CRIT_C]: 30000, // ~10x Goblin King
-      [StatValue.CRIT_D]: 225, // 225% crit damage
-    },
-    ascensionPoints: 50,
-    bossAbility: {
-      name: "Inferno Breath",
-      cooldown: 2.5,
-      // Converted existing boss ability to use the new AbilityEffect interface
-      effects: [{ baseDamage: 2500, damageType: DamageValue.Magic }],
-      id: "",
-      description: "",
-      icon: function (_props: IconBaseProps): React.ReactNode {
-        throw new Error("Function not implemented.");
-      },
-      unlockCondition: {
-        stat: StatValue.INT,
-        required: 0
-      },
-      damageMultiplier: 0,
-      statusEffect: undefined
-    },
-  },
-};
+// --- PATHS ---
+// Import all paths from the organized paths data structure
+import { PATH_DATA } from "../data/paths";
+
+export { PATH_DATA };
+
+// --- BOSSES ---
+// Import all bosses from the organized bosses data structure
+import { ALL_BOSSES } from "../data/bosses";
+
+export const BOSS_DATA = ALL_BOSSES;
 
 // --- ASCENSION UPGRADES ---
 export const ASCENSION_UPGRADES: AscensionUpgradeDefinition[] = [
@@ -282,8 +170,8 @@ export const ASCENSION_UPGRADES: AscensionUpgradeDefinition[] = [
     id: "maxBattleAbilities",
     name: "Battle Ability Slots",
     description: "Increases the number of abilities you can use in battle by 1 per level.",
-    maxLevel: 5,
-    cost: (_lvl) => 3, // Flat 3 AP cost
+    maxLevel: 3,
+    cost: (lvl) => [3, 50, 300][lvl] || 300, // Level 1: 3 AP, Level 2: 50 AP, Level 3: 300 AP
     effect: (lvl) => lvl, // +1 slot per level
     unlockConditions: [{ type: "bossDefeats", bossId: "TrainingDummy", count: 3 }],
   },
@@ -291,8 +179,8 @@ export const ASCENSION_UPGRADES: AscensionUpgradeDefinition[] = [
     id: "maxActiveJobs",
     name: "Active Job Slots",
     description: "Increases the number of jobs you can train simultaneously by 1 per level.",
-    maxLevel: 5,
-    cost: (_lvl) => 5, // Flat 5 AP cost
+    maxLevel: 3,
+    cost: (lvl) => [5, 30, 150][lvl] || 150, // Level 1: 5 AP, Level 2: 30 AP, Level 3: 150 AP
     effect: (lvl) => lvl, // +1 slot per level
     unlockConditions: [{ type: "bossDefeats", bossId: "TrainingDummy", count: 3 }],
   },
@@ -300,8 +188,8 @@ export const ASCENSION_UPGRADES: AscensionUpgradeDefinition[] = [
     id: "maxActiveSkills",
     name: "Active Skill Slots",
     description: "Increases the number of skills you can train simultaneously by 1 per level.",
-    maxLevel: 5,
-    cost: (_lvl) => 5, // Flat 5 AP cost
+    maxLevel: 3,
+    cost: (lvl) => [5, 30, 150][lvl] || 150, // Level 1: 5 AP, Level 2: 30 AP, Level 3: 150 AP
     effect: (lvl) => lvl, // +1 slot per level
     unlockConditions: [{ type: "bossDefeats", bossId: "TrainingDummy", count: 3 }],
   },
@@ -309,8 +197,8 @@ export const ASCENSION_UPGRADES: AscensionUpgradeDefinition[] = [
     id: "maxActiveAbilities",
     name: "Training Ability Slots",
     description: "Increases the number of abilities you can train simultaneously by 1 per level.",
-    maxLevel: 5,
-    cost: (_lvl) => 5, // Flat 5 AP cost
+    maxLevel: 3,
+    cost: (lvl) => [5, 30, 150][lvl] || 150, // Level 1: 5 AP, Level 2: 30 AP, Level 3: 150 AP
     effect: (lvl) => lvl, // +1 slot per level
     unlockConditions: [{ type: "bossDefeats", bossId: "TrainingDummy", count: 3 }],
   },

@@ -119,8 +119,27 @@ const SkillsTab: React.FC<SkillsTabProps> = ({
                     </div>
                     
                     {/* Effect - compact */}
-                    <div className="text-[10px] font-semibold text-teal-600 bg-teal-500/15 px-2 py-0.5 rounded inline-block">
-                      +{effectValue.toFixed(0)}% {data.effects[0].type === "jobExp" ? "Job" : "Skill"} XP
+                    <div className="flex items-center gap-1.5 flex-wrap">
+                      <div className="text-[10px] font-semibold text-teal-600 bg-teal-500/15 px-2 py-0.5 rounded">
+                        +{effectValue.toFixed(0)}% {data.effects[0].type === "traitJobExp" ? "Job" : data.effects[0].type === "skillExp" ? "Skill" : data.effects[0].type === "abilityExp" ? "Ability" : "Job"} XP
+                      </div>
+                      {/* Display traits if this is a trait-based skill */}
+                      {data.effects.some(e => e.type === "traitJobExp") && (
+                        <div className="flex items-center gap-0.5">
+                          {data.effects
+                            .filter(e => e.type === "traitJobExp")
+                            .map((effect, idx) => (
+                              <span
+                                key={idx}
+                                className="text-[9px] font-bold text-amber-500 bg-amber-500/15 px-1.5 py-0.5 rounded border border-amber-500/30"
+                                title={`Affects ${effect.trait} trait jobs`}
+                              >
+                                {effect.trait}
+                              </span>
+                            ))
+                          }
+                        </div>
+                      )}
                     </div>
                   </div>
                 </div>
@@ -223,9 +242,34 @@ const SkillsTab: React.FC<SkillsTabProps> = ({
                 +{(selectedSkillData.effects[0].value * selectedSkillLevel.level * 100).toFixed(1)}%
               </p>
               <p className="text-sm text-slate-400 mt-1">
-                {selectedSkillData.effects[0].type === "jobExp" ? "Job Experience Gain" : "Skill Experience Gain"}
+                {selectedSkillData.effects[0].type === "traitJobExp" 
+                  ? "Job Experience Gain" 
+                  : selectedSkillData.effects[0].type === "skillExp" 
+                  ? "Skill Experience Gain"
+                  : selectedSkillData.effects[0].type === "abilityExp"
+                  ? "Ability Experience Gain"
+                  : "Experience Gain"}
               </p>
-              <p className="text-xs text-slate-500 mt-2">
+              {/* Show traits if applicable */}
+              {selectedSkillData.effects.some(e => e.type === "traitJobExp") && (
+                <div className="mt-3 pt-3 border-t border-teal-500/20">
+                  <p className="text-xs text-slate-400 mb-2">Affects jobs with traits:</p>
+                  <div className="flex flex-wrap gap-1.5">
+                    {selectedSkillData.effects
+                      .filter(e => e.type === "traitJobExp")
+                      .map((effect, idx) => (
+                        <span
+                          key={idx}
+                          className="text-xs font-semibold text-amber-400 bg-amber-500/20 px-2.5 py-1 rounded-lg border border-amber-500/40"
+                        >
+                          {effect.trait}
+                        </span>
+                      ))
+                    }
+                  </div>
+                </div>
+              )}
+              <p className="text-xs text-slate-500 mt-3">
                 +{(selectedSkillData.effects[0].value * 100).toFixed(1)}% per level
               </p>
             </div>

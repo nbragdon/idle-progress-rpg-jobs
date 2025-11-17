@@ -47,7 +47,7 @@ export const Sage: JobDefinition = {
     { type: "skillLevel", skillId: "ArcaneStudies", level: 24 },
     { type: "skillLevel", skillId: "PhysicalTraining", level: 24 },
     { type: "skillLevel", skillId: "SwiftLearning", level: 24 },
-    { type: "stat", stat: StatValue.INT, value: 120 },
+    // INT removed: Just Wizard 24 alone (Mage 10 + Wizard 24 = 126 INT), plus Sorcerer and Warlock - massively redundant
   ],
 };
 
@@ -68,9 +68,10 @@ export const ApexPredator: JobDefinition = {
     { type: "jobLevel", jobId: "Thief", level: 24 },
     { type: "jobLevel", jobId: "Skirmisher", level: 24 },
     { type: "bossDefeats", bossId: "GoblinKing", count: 1 },
-    { type: "stat", stat: StatValue.AGI, value: 96 },
-    { type: "stat", stat: StatValue.DEX, value: 96 },
     { type: "stat", stat: StatValue.CRIT_C, value: 480 },
+    // AGI removed: Rogue 20 + Shadow 24 + Thief 24 + Skirmisher 24 = 220 AGI total (redundant)
+    // DEX removed: Rogue 20 + Shadow 24 + Thief 24 + Skirmisher 24 = 268 DEX total (redundant)
+    // CRIT_C kept: Total from all = 272 CRIT_C, need 480 (meaningful - requires extra focus)
   ],
 };
 

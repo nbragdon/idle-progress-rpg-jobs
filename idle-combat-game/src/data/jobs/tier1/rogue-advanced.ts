@@ -53,8 +53,7 @@ export const Skirmisher: JobDefinition = {
   ],
   unlockConditions: [
     { type: "jobLevel", jobId: "Rogue", level: 12 },
-    { type: "stat", stat: StatValue.AGI, value: 30 },
-    { type: "stat", stat: StatValue.DEX, value: 25 },
+    { type: "stat", stat: StatValue.AGI, value: 30 }, // Requires slightly more AGI than Rogue 12 provides (24)
   ],
 };
 

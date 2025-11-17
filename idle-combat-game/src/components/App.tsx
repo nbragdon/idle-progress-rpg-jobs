@@ -10,6 +10,7 @@ import AbilitiesTab from "./AbilitiesTab";
 import BossTab from "./BossTab";
 import BattleDisplay from "./BattleDisplay";
 import AscensionTab from "./AscensionTab";
+import PathsTab from "./PathsTab";
 import SettingsTab from "./SettingsTab";
 import Modal from "./Modal";
 import { STAT_MAP } from "../core/data";
@@ -58,6 +59,7 @@ const App: React.FC = () => {
     startBossBattle,
     closeBattle,
     resetGame,
+    selectPath,
   } = useGame();
 
   const [showStatsModal, setShowStatsModal] = React.useState(false);
@@ -237,6 +239,11 @@ const App: React.FC = () => {
                 gameState={gameState}
                 buyAscensionUpgrade={buyAscensionUpgrade}
                 ascend={ascend}
+              />
+            ) : activeTab === "Paths" ? (
+              <PathsTab
+                gameState={gameState}
+                selectPath={selectPath}
               />
             ) : activeTab === "Settings" ? (
               <SettingsTab

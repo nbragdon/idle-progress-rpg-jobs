@@ -159,6 +159,10 @@ export const useGameEngine = () => {
     // Reset engine
     engine.reset(freshState);
   }, [engine]);
+  
+  const selectPath = useCallback((pathId: string) => {
+    return engine.selectPath(pathId);
+  }, [engine]);
 
   return {
     gameState,
@@ -179,6 +183,7 @@ export const useGameEngine = () => {
     closeBattle,
     calculatePlayerStats,
     resetGame,
+    selectPath,
   };
 };
 

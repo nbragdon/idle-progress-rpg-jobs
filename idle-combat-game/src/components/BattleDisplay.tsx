@@ -5,8 +5,9 @@ import React from "react";
 import type { BattleState } from "../types/game";
 import { STAT_MAP } from "../core/data";
 import { StatValue } from "../types/game";
-import { FaHeart, FaCrosshairs, FaShieldAlt, FaTrophy, FaBolt } from "react-icons/fa";
+import { FaHeart, FaCrosshairs, FaTrophy, FaBolt } from "react-icons/fa";
 import { GiCrossedSwords, GiBroadsword, GiFireball } from "react-icons/gi";
+import StatusEffectDisplay from "./StatusEffectDisplay";
 
 interface BattleDisplayProps {
   battleState: BattleState;
@@ -68,6 +69,9 @@ const BattleDisplay: React.FC<BattleDisplayProps> = ({ battleState, closeBattle 
               </span>
             </div>
           </div>
+
+          {/* Player Status Effects */}
+          <StatusEffectDisplay effects={battleState.playerStatusEffects} />
 
           {/* Player Abilities */}
           <div className="mt-4 grid grid-cols-1 sm:grid-cols-2 gap-3">
@@ -152,6 +156,9 @@ const BattleDisplay: React.FC<BattleDisplayProps> = ({ battleState, closeBattle 
               </span>
             </div>
           </div>
+
+          {/* Boss Status Effects */}
+          <StatusEffectDisplay effects={battleState.bossStatusEffects} />
 
           {/* Boss Abilities */}
           <div className="mt-4 grid grid-cols-1 sm:grid-cols-2 gap-3">
