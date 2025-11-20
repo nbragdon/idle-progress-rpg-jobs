@@ -54,10 +54,10 @@ const StatsTab: React.FC<StatsTabProps> = ({ playerStats, totalLevels }) => {
           const statDef = STAT_MAP[statId];
           const value = playerStats[statId] || 0;
           const displayValue = statId === StatValue.CRIT_C
-            ? value.toFixed(1) // Raw value, no percentage
+            ? value.toFixed(1) // Raw value with 1 decimal
             : statId === StatValue.CRIT_D
-            ? `${value.toFixed(0)}%`
-            : Math.floor(value).toString();
+            ? `${value.toFixed(0)}%` // Percentage, no decimals
+            : value.toFixed(1); // All other stats with 1 decimal
 
           return (
             <div

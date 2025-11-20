@@ -200,9 +200,39 @@ statusEffectConfig: {
    - Check if disarmed/silenced (abilities blocked)
    - Apply Weak/Strong modifiers to damage
    - Apply shield absorption
-   - Apply status effects from ability
+   - Apply status effects from ability (with resistance check)
 4. **Process Boss Abilities** - Same as player
 5. **Update State**
+
+### Status Effect Application Chance
+
+**Defensive effects** (Shield, Strong) **always succeed** and apply to self.
+
+**Offensive effects** (Weak, Poison, Stun, Disarm, Silence) require a **resistance check**:
+
+```typescript
+applicationChance = calculateStatusEffectChance(
+  attackerConcentration,
+  defenderResistance
+)
+```
+
+**Formula Breakdown:**
+- **CONC >= 2x RES:** 100% application (attacker needs **DOUBLE** to guarantee)
+- **CONC = RES:** 50% application (fair coin flip at equal stats)
+- **RES = 2x CONC:** 5% application (95% resist - **strong resistance advantage**)
+- **RES > 2x CONC:** 5% minimum (floor)
+
+**Example:**
+```
+Attacker CONC: 100, Defender RES: 50 → 100% application (2x concentration = guaranteed)
+Attacker CONC: 100, Defender RES: 75 → 75% application
+Attacker CONC: 100, Defender RES: 100 → 50% application (equal stats = coin flip)
+Attacker CONC: 100, Defender RES: 150 → ~27% application
+Attacker CONC: 100, Defender RES: 200+ → 5% application (minimum/floor)
+```
+
+This favors resistance by requiring **2x CONC to guarantee** application, but provides a fair 50/50 chance at equal stats. Status effects require significant CONC investment to be reliable.
 
 ### Scaling Formula
 ```typescript
@@ -262,7 +292,7 @@ effectiveDuration = baseDuration + (maxDuration - baseDuration) * progress
 
 ## Future Enhancements
 - [ ] Multiple status effects per ability
-- [ ] Status effect resistance stats
+- [x] Status effect resistance stats (CONC vs RES implemented)
 - [ ] Status effect cleanse abilities
 - [ ] Status effect icons in battle UI
 - [ ] Status effect duration bars

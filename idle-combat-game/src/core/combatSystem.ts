@@ -124,6 +124,51 @@ export function calculateCritChance(
 }
 
 /**
+ * Calculate status effect application chance based on attacker CONC vs defender RES
+ * Favors resistance - requires 2x CONC to guarantee application
+ * 
+ * Formula breakdown:
+ * - CONC >= 2x RES: 100% application (attacker needs DOUBLE to guarantee)
+ * - CONC = RES: 50% application (fair coin flip at equal stats)
+ * - RES = 2x CONC: 5% application (minimum - very strong resistance)
+ * - RES > 2x CONC: 5% minimum (floor)
+ */
+export function calculateStatusEffectChance(
+  attackerConcentration: number,
+  defenderResistance: number
+): number {
+  // Prevent division by zero
+  if (attackerConcentration <= 0) return 0.05; // 5% if attacker has no CONC
+  
+  // Calculate RES to CONC ratio
+  const ratio = defenderResistance / attackerConcentration;
+  
+  let applicationChance: number;
+  
+  if (ratio <= 0.5) {
+    // Attacker has 2x or more CONC than defender's RES - guaranteed application
+    applicationChance = 1.0; // 100%
+  } else if (ratio <= 1.0) {
+    // Interpolation from 100% (at ratio=0.5) to 50% (at ratio=1.0)
+    // Formula: 100 - 100 * (ratio - 0.5)
+    // At ratio=0.5: 100 - 100*0 = 100%
+    // At ratio=1.0: 100 - 100*0.5 = 50%
+    applicationChance = 1.0 - 1.0 * (ratio - 0.5);
+  } else if (ratio <= 2.0) {
+    // Interpolation from 50% (at ratio=1.0) to 5% (at ratio=2.0)
+    // Formula: 50 - 45 * (ratio - 1.0)
+    // At ratio=1.0: 50 - 45*0 = 50%
+    // At ratio=2.0: 50 - 45*1 = 5%
+    applicationChance = 0.50 - 0.45 * (ratio - 1.0);
+  } else {
+    // Floor at 5% for any ratio beyond 2x
+    applicationChance = 0.05;
+  }
+  
+  return applicationChance;
+}
+
+/**
  * Get effective base damage for an ability based on level
  */
 export function getEffectiveBaseDamage(ability: AbilityDefinition, level: number): number {

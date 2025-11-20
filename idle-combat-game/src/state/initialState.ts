@@ -88,6 +88,15 @@ export const getInitialState = (): GameState => {
       return acc;
     }, {} as Record<AscensionUpgradeDefinition["id"], number>), // FIX: Used correct type for permanentUpgrades accumulator
     ascensionUnlocked: false, // Unlocked after first boss defeat
+    
+    // Settings/Preferences (defaults to enabled when upgrades are purchased)
+    settings: {
+      autoTrainingEnabled: {
+        jobs: true,
+        skills: true,
+        abilities: true,
+      },
+    },
 
     // Boss Data
     currentBossId: FIRST_BOSS_ID, // FIX: Corrected to use "TrainingDummy"
@@ -106,6 +115,19 @@ export const getInitialState = (): GameState => {
       selectedPathId: null,
       selectionTime: 0,
       totalAscensions: 0,
+    },
+    
+    // Horde System
+    hordeState: {
+      goblins: 0,
+      goblinGeneration: 1, // 1 goblin per second
+      upgrades: {
+        Physical: { id: "Physical", level: 0 },
+        Magical: { id: "Magical", level: 0 },
+        Swift: { id: "Swift", level: 0 },
+      },
+      totalLevels: 0,
+      unlocked: false, // Unlocked after defeating Goblin King 5+ times
     },
 
     // Removed extraneous properties: version, lastSave, maxActiveJobs, maxActiveSkills, maxActiveAbilities

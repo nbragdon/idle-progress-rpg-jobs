@@ -74,7 +74,32 @@ Final Crit Chance = 200 / (10 × 100) = 0.20 (20%)
 If crit triggers: damage × (150 / 100) = damage × 1.5
 ```
 
-### **4. HP Calculation**
+### **4. Status Effect Application** (CONC vs RES)
+- **Defensive Effects** (Shield, Strong): Always succeed, apply to self
+- **Offensive Effects** (Weak, Poison, Stun, Disarm, Silence): Require resistance check
+- **Formula:** Favors resistance - requires 2x CONC for guarantee
+  - `CONC >= 2x RES`: 100% application (need DOUBLE to guarantee)
+  - `CONC = RES`: 50% application (fair coin flip at equal stats)
+  - `RES = 2x CONC`: 5% application (minimum - very strong resistance)
+  - `RES > 2x CONC`: 5% minimum (floor)
+
+**Example:**
+```
+Attacker: CONC = 100
+Defender: RES = 50 → 100% application (2x concentration = guaranteed)
+Defender: RES = 75 → 75% application
+Defender: RES = 100 → 50% application (equal stats = fair chance)
+Defender: RES = 150 → ~27% application
+Defender: RES = 200+ → 5% application (floor)
+```
+
+This creates the offensive/defensive stat pair:
+- **CONC** (Concentration): Increases status effect application chance
+- **RES** (Resistance): Reduces opponent's status effect application chance
+
+**Note:** This formula favors resistance by requiring **double** the defender's RES for guaranteed application, but provides a fair 50/50 chance at equal stats. Status effects are a viable strategy but require significant CONC investment.
+
+### **5. HP Calculation**
 - **Formula:** `maxHP = 10 + (Constitution × 10)`
 - **Example:**
   - CON 10 → 110 HP
@@ -247,7 +272,8 @@ Requires: Significant ascension investment, multiple job mastery
 ### **Planned (not implemented yet)**
 - ✅ Battle system working
 - ✅ Real-time simulation
-- ❌ Status effects (Stun, Poison, Weakness)
+- ✅ Status effects (Shield, Strong, Weak, Poison, Stun, Disarm, Silence)
+- ✅ Status effect resistance (CONC vs RES)
 - ❌ Multiple active abilities (upgradeable)
 - ❌ Real-time battle visualization
 - ❌ Ability combos
@@ -255,12 +281,21 @@ Requires: Significant ascension investment, multiple job mastery
 - ❌ Loot drops
 - ❌ Battle statistics tracking
 
-### **Status Effects** (Future)
+### **Status Effects** (Implemented)
 ```typescript
-Stun: Prevents actions for duration
-Poison: DoT (damage over time)
-Weakness: Reduces damage dealt
+// Defensive (always succeed)
+Shield: Absorbs damage before HP is affected
+Strong: Increases damage dealt by percentage
+
+// Offensive (require CONC vs RES check)
+Weak: Reduces damage dealt by percentage
+Poison: DoT (true damage over time)
+Stun: Prevents all actions (cooldowns frozen)
+Disarm: Prevents physical abilities
+Silence: Prevents magical abilities
 ```
+
+See `STATUS_EFFECTS.md` for full documentation.
 
 ## Technical Details
 
@@ -277,6 +312,7 @@ Weakness: Reduces damage dealt
 - `calculateHitChance()` - DEX vs AGI
 - `calculateDamageReduction()` - TGH/FRT reduction
 - `calculateCritChance()` - Crit with defense reduction
+- `calculateStatusEffectChance()` - CONC vs RES for status effects
 - `calculateDamage()` - Final damage calculation
 - `simulateBattle()` - Complete battle simulation
 
@@ -314,11 +350,23 @@ AGI Advantage | Hit Chance
 ### **Crit Reduction**
 ```
 Avg Defense | Crit Reduction
-     0      |    0%
-   100      |   10%
-   200      |   20%
-   500      |   50%
-  1000      |  100% (no crits)
+    0      |    0%
+  100      |   10%
+  200      |   20%
+  500      |   50%
+ 1000      |  100% (no crits)
+```
+
+### **Status Effect Application Chance**
+```
+CONC vs RES | Application Chance | Notes
+CONC = 2x+  |   100% (guaranteed) | Need double to guarantee
+CONC = 1.5x |   75%               | Good advantage
+CONC = RES  |   50%               | Fair coin flip at equal
+RES = 1.25x |   ~39%              | Defender has edge
+RES = 1.5x  |   ~27%              | Steep dropoff
+RES = 2x    |    5%               | Minimum reached
+RES = 3x+   |    5% (floor)       | Cannot go lower
 ```
 
 ---

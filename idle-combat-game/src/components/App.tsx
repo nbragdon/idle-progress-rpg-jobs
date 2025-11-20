@@ -11,6 +11,7 @@ import BossTab from "./BossTab";
 import BattleDisplay from "./BattleDisplay";
 import AscensionTab from "./AscensionTab";
 import PathsTab from "./PathsTab";
+import HordeTab from "./HordeTab";
 import SettingsTab from "./SettingsTab";
 import Modal from "./Modal";
 import { STAT_MAP } from "../core/data";
@@ -54,12 +55,16 @@ const App: React.FC = () => {
     toggleSkillActive,
     toggleAbilityTraining,
     toggleAbilityBattle,
+    toggleAutoTrainingJobs,
+    toggleAutoTrainingSkills,
+    toggleAutoTrainingAbilities,
     buyAscensionUpgrade,
     ascend,
     startBossBattle,
     closeBattle,
     resetGame,
     selectPath,
+    purchaseHordeUpgrade,
   } = useGame();
 
   const [showStatsModal, setShowStatsModal] = React.useState(false);
@@ -210,6 +215,7 @@ const App: React.FC = () => {
                 playerStats={playerStats}
                 maxActiveJobs={maxLimits.maxActiveJobs}
                 toggleJobActive={toggleJobActive}
+                toggleAutoTrainingJobs={toggleAutoTrainingJobs}
               />
             ) : activeTab === "Skills" ? (
               <SkillsTab
@@ -217,6 +223,7 @@ const App: React.FC = () => {
                 gameState={gameState}
                 maxActiveSkills={maxLimits.maxActiveSkills}
                 toggleSkillActive={toggleSkillActive}
+                toggleAutoTrainingSkills={toggleAutoTrainingSkills}
               />
             ) : activeTab === "Abilities" ? (
               <AbilitiesTab
@@ -227,6 +234,7 @@ const App: React.FC = () => {
                 gameState={gameState}
                 toggleAbilityTraining={toggleAbilityTraining}
                 toggleAbilityBattle={toggleAbilityBattle}
+                toggleAutoTrainingAbilities={toggleAutoTrainingAbilities}
               />
             ) : activeTab === "Boss" ? (
               <BossTab
@@ -244,6 +252,11 @@ const App: React.FC = () => {
               <PathsTab
                 gameState={gameState}
                 selectPath={selectPath}
+              />
+            ) : activeTab === "Horde" ? (
+              <HordeTab
+                gameState={gameState}
+                purchaseHordeUpgrade={purchaseHordeUpgrade}
               />
             ) : activeTab === "Settings" ? (
               <SettingsTab
@@ -270,11 +283,13 @@ const App: React.FC = () => {
               const StatIcon = statInfo.icon;
               
               // Format display value
-              let displayValue = value.toString();
+              let displayValue: string;
               if (statId === 'CRIT_C') {
-                displayValue = value.toFixed(1); // Raw value, no percentage
+                displayValue = value.toFixed(1); // Raw value with 1 decimal
               } else if (statId === 'CRIT_D') {
-                displayValue = `${value.toFixed(0)}%`;
+                displayValue = `${value.toFixed(0)}%`; // Percentage, no decimals
+              } else {
+                displayValue = value.toFixed(1); // All other stats with 1 decimal
               }
               
               return (

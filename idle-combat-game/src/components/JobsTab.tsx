@@ -15,6 +15,7 @@ interface JobsTabProps {
   playerStats: PlayerStats;
   maxActiveJobs: number;
   toggleJobActive: (jobId: string) => void;
+  toggleAutoTrainingJobs: () => void;
 }
 
 const JobsTab: React.FC<JobsTabProps> = ({
@@ -23,6 +24,7 @@ const JobsTab: React.FC<JobsTabProps> = ({
   playerStats,
   maxActiveJobs,
   toggleJobActive,
+  toggleAutoTrainingJobs,
 }) => {
   // Modal state
   const [selectedJobId, setSelectedJobId] = useState<string | null>(null);
@@ -49,6 +51,9 @@ const JobsTab: React.FC<JobsTabProps> = ({
   const selectedJobData = selectedJobId ? JOB_DATA[selectedJobId] as JobDefinition : null;
   const selectedJobLevel = selectedJob ? calculateLevelFromExp(selectedJob.exp) : null;
 
+  // Check if auto-training is enabled
+  const hasAutoTraining = (gameState.permanentUpgrades.autoTrainAllJobs || 0) > 0;
+
   return (
     <div className="space-y-6 animate-fade-in">
       {/* Header */}
@@ -61,6 +66,35 @@ const JobsTab: React.FC<JobsTabProps> = ({
           </p>
         </div>
       </div>
+      
+      {/* Auto-Training Banner */}
+      {(gameState.permanentUpgrades.autoTrainAllJobs || 0) > 0 && (
+        <div className="rounded-xl bg-gradient-to-r from-purple-500/20 to-teal-500/20 border border-purple-500/30 p-4">
+          <div className="flex items-center justify-between gap-4">
+            <div className="flex items-center gap-3">
+              <div className="text-2xl">✨</div>
+              <div>
+                <h3 className="text-lg font-semibold text-white">Omnipresent Training</h3>
+                <p className="text-sm text-slate-300">
+                  {gameState.settings.autoTrainingEnabled.jobs 
+                    ? "All unlocked jobs are automatically training" 
+                    : "Auto-training disabled - toggle to re-enable"}
+                </p>
+              </div>
+            </div>
+            <button
+              onClick={toggleAutoTrainingJobs}
+              className={`px-4 py-2 rounded-lg font-semibold text-sm transition-all ${
+                gameState.settings.autoTrainingEnabled.jobs
+                  ? "bg-teal-500 text-white hover:brightness-110"
+                  : "bg-slate-700 text-slate-300 hover:bg-slate-600"
+              }`}
+            >
+              {gameState.settings.autoTrainingEnabled.jobs ? "ON" : "OFF"}
+            </button>
+          </div>
+        </div>
+      )}
 
       {/* Compact Job Grid */}
       <div className="grid gap-4 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3">
@@ -109,18 +143,28 @@ const JobsTab: React.FC<JobsTabProps> = ({
 
                   {/* Name & Level */}
                   <div className="flex-1 min-w-0">
-                    <div className="flex items-center gap-2 mb-1">
+                    <div className="flex items-center gap-2 mb-1 flex-wrap">
                       <h3 className="text-base font-semibold text-white truncate">
                         {data.name}
                       </h3>
                       <span className="rounded-full border border-slate-600/50 bg-slate-700/50 px-2.5 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-slate-300 shrink-0">
                         {level}
                       </span>
+                      {/* Traits */}
+                      {data.traits?.map((trait, idx) => (
+                        <span
+                          key={idx}
+                          className="rounded px-1.5 py-0.5 text-[9px] font-medium bg-teal-900/30 text-teal-300 border border-teal-700/30 shrink-0"
+                          title={`${trait} trait`}
+                        >
+                          {trait}
+                        </span>
+                      ))}
                     </div>
                     
                     {/* Stat Gains - compact */}
                     <div className="flex items-center gap-2 flex-wrap">
-                      {data.statBonuses.slice(0, 3).map((bonus, idx) => {
+                      {data.statBonuses.map((bonus, idx) => {
                         const StatIcon = STAT_MAP[bonus.stat].icon;
                         return (
                           <div

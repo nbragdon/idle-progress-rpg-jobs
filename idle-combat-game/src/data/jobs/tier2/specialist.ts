@@ -13,11 +13,16 @@ export const GrandMaster: JobDefinition = {
   icon: GiSamuraiHelmet,
   traits: [TraitValue.Physical, TraitValue.Tactical, TraitValue.Tank],
   statBonuses: [
-    { stat: StatValue.STR, value: 7.5 },
-    { stat: StatValue.TGH, value: 6.0 },
-    { stat: StatValue.CON, value: 6.0 },
-    { stat: StatValue.DEX, value: 5.5 },
-    { stat: StatValue.AGI, value: 5.5 },
+    { stat: StatValue.CON, value: 7.5 },
+    { stat: StatValue.STR, value: 7.0 },
+    { stat: StatValue.DEX, value: 6.0 },
+    { stat: StatValue.TGH, value: 5.5 },
+    { stat: StatValue.AGI, value: 5.0 },
+    { stat: StatValue.CONC, value: 2.5 },
+    { stat: StatValue.FRT, value: 2.0 },
+    { stat: StatValue.INT, value: 1.5 },
+    { stat: StatValue.RES, value: 1.0 },
+    { stat: StatValue.CRIT_C, value: 1.0 },
   ],
   unlockConditions: [
     { type: "jobLevel", jobId: "Guardian", level: 24 },
@@ -35,10 +40,16 @@ export const Sage: JobDefinition = {
   icon: GiOpenBook,
   traits: [TraitValue.Magical, TraitValue.Tactical, TraitValue.Support],
   statBonuses: [
-    { stat: StatValue.INT, value: 10.5 },
+    { stat: StatValue.INT, value: 9.5 },
     { stat: StatValue.CONC, value: 7.5 },
-    { stat: StatValue.RES, value: 6.0 },
-    { stat: StatValue.FRT, value: 4.5 },
+    { stat: StatValue.FRT, value: 5.0 },
+    { stat: StatValue.RES, value: 4.5 },
+    { stat: StatValue.DEX, value: 3.0 },
+    { stat: StatValue.CON, value: 2.5 },
+    { stat: StatValue.AGI, value: 1.5 },
+    { stat: StatValue.CRIT_C, value: 1.0 },
+    { stat: StatValue.TGH, value: 0.5 },
+    { stat: StatValue.STR, value: 0.5 },
   ],
   unlockConditions: [
     { type: "jobLevel", jobId: "Wizard", level: 24 },
@@ -58,20 +69,25 @@ export const ApexPredator: JobDefinition = {
   icon: GiWolfHowl,
   traits: [TraitValue.Swift, TraitValue.Stealth, TraitValue.DPS, TraitValue.Aggressive],
   statBonuses: [
-    { stat: StatValue.AGI, value: 9.0 },
     { stat: StatValue.DEX, value: 9.0 },
-    { stat: StatValue.CRIT_C, value: 15.0 },
-    { stat: StatValue.CRIT_D, value: 5.5 },
+    { stat: StatValue.AGI, value: 8.5 },
+    { stat: StatValue.CRIT_C, value: 9.0 },
+    { stat: StatValue.CRIT_D, value: 5.0 },
+    { stat: StatValue.CONC, value: 3.5 },
+    { stat: StatValue.CON, value: 3.0 },
+    { stat: StatValue.STR, value: 2.0 },
+    { stat: StatValue.INT, value: 1.5 },
+    { stat: StatValue.FRT, value: 1.0 },
+    { stat: StatValue.TGH, value: 0.5 },
+    { stat: StatValue.RES, value: 0.5 },
   ],
   unlockConditions: [
     { type: "jobLevel", jobId: "Shadow", level: 24 },
     { type: "jobLevel", jobId: "Thief", level: 24 },
     { type: "jobLevel", jobId: "Skirmisher", level: 24 },
     { type: "bossDefeats", bossId: "GoblinKing", count: 1 },
-    { type: "stat", stat: StatValue.CRIT_C, value: 480 },
-    // AGI removed: Rogue 20 + Shadow 24 + Thief 24 + Skirmisher 24 = 220 AGI total (redundant)
-    // DEX removed: Rogue 20 + Shadow 24 + Thief 24 + Skirmisher 24 = 268 DEX total (redundant)
-    // CRIT_C kept: Total from all = 272 CRIT_C, need 480 (meaningful - requires extra focus)
+    { type: "stat", stat: StatValue.CRIT_C, value: 720 },
+    // CRIT_C kept: Requires significant crit focus beyond basic path requirements
   ],
 };
 

@@ -296,7 +296,10 @@ export const isAbilityAvailable = (abilityId: string, gameState: GameState): boo
  * Checks if an ascension upgrade is unlocked based on unlock conditions
  */
 export const isAscensionUpgradeUnlocked = (
-  upgrade: { unlockConditions?: Array<{ type: "bossDefeats"; bossId: string; count: number }> },
+  upgrade: { unlockConditions?: Array<
+    | { type: "bossDefeats"; bossId: string; count: number }
+    | { type: "ascensions"; count: number }
+  > },
   gameState: GameState
 ): boolean => {
   // If no unlock conditions, it's always unlocked
@@ -309,6 +312,9 @@ export const isAscensionUpgradeUnlocked = (
     if (condition.type === "bossDefeats") {
       const progress = gameState.bossProgress[condition.bossId];
       return progress && progress.defeated >= condition.count;
+    }
+    if (condition.type === "ascensions") {
+      return gameState.pathState.totalAscensions >= condition.count;
     }
     return false;
   });

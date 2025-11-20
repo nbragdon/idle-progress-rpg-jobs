@@ -96,6 +96,15 @@ export const loadGame = (): GameState => {
         lastTickTime: parsedState.lastTickTime ?? Date.now(),
         activeTab: parsedState.activeTab ?? "Jobs",
         
+        // Settings/Preferences
+        settings: {
+          autoTrainingEnabled: {
+            jobs: parsedState.settings?.autoTrainingEnabled?.jobs ?? true,
+            skills: parsedState.settings?.autoTrainingEnabled?.skills ?? true,
+            abilities: parsedState.settings?.autoTrainingEnabled?.abilities ?? true,
+          },
+        },
+        
         // Battle state (never persisted)
         battleState: null,
         
@@ -104,6 +113,15 @@ export const loadGame = (): GameState => {
           selectedPathId: parsedState.pathState?.selectedPathId ?? null,
           selectionTime: parsedState.pathState?.selectionTime ?? 0,
           totalAscensions: parsedState.pathState?.totalAscensions ?? 0,
+        },
+        
+        // Horde system
+        hordeState: {
+          goblins: parsedState.hordeState?.goblins ?? 0,
+          goblinGeneration: parsedState.hordeState?.goblinGeneration ?? 1,
+          upgrades: parsedState.hordeState?.upgrades ?? initialState.hordeState.upgrades,
+          totalLevels: parsedState.hordeState?.totalLevels ?? 0,
+          unlocked: parsedState.hordeState?.unlocked ?? false,
         },
       } as GameState;
     }

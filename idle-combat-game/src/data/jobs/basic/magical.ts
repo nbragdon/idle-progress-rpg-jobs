@@ -12,9 +12,12 @@ export const Mage: JobDefinition = {
   icon: GiSpellBook,
   traits: [TraitValue.Magical],
   statBonuses: [
-    { stat: StatValue.INT, value: 2.0 },
-    { stat: StatValue.CONC, value: 1.5 },
+    { stat: StatValue.INT, value: 2.5 },
+    { stat: StatValue.CONC, value: 2.0 },
+    { stat: StatValue.DEX, value: 1.0 },
+    { stat: StatValue.FRT, value: 1.0 },
     { stat: StatValue.RES, value: 1.0 },
+    { stat: StatValue.CON, value: 0.5 },
   ],
 };
 

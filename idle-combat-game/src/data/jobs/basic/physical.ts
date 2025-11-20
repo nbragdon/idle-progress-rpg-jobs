@@ -13,9 +13,11 @@ export const Warrior: JobDefinition = {
   icon: GiCrossedSwords,
   traits: [TraitValue.Physical],
   statBonuses: [
-    { stat: StatValue.STR, value: 2.0 },
+    { stat: StatValue.STR, value: 2.5 },
+    { stat: StatValue.CON, value: 2.0 },
     { stat: StatValue.TGH, value: 1.5 },
-    { stat: StatValue.CON, value: 1.0 },
+    { stat: StatValue.DEX, value: 1.0 },
+    { stat: StatValue.CONC, value: 0.5 },
   ],
 };
 
@@ -26,10 +28,12 @@ export const Rogue: JobDefinition = {
   icon: FaFeatherAlt,
   traits: [TraitValue.Swift],
   statBonuses: [
-    { stat: StatValue.DEX, value: 2.0 },
-    { stat: StatValue.AGI, value: 1.5 },
-    { stat: StatValue.CRIT_D, value: 1.0 }, // +1% crit damage per level
-    { stat: StatValue.CRIT_C, value: 2.0 }, // Basic crit chance scaling
+    { stat: StatValue.DEX, value: 2.5 },
+    { stat: StatValue.AGI, value: 2.0 },
+    { stat: StatValue.CRIT_C, value: 2.0 },
+    { stat: StatValue.CON, value: 1.0 },
+    { stat: StatValue.CONC, value: 1.0 },
+    { stat: StatValue.CRIT_D, value: 1.0 },
   ],
 };
 

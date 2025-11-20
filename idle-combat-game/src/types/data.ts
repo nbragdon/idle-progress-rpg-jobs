@@ -216,6 +216,12 @@ export const AscensionUpgradeIdValue = {
   maxActiveSkills: "maxActiveSkills",
   maxActiveAbilities: "maxActiveAbilities",
   maxBattleAbilities: "maxBattleAbilities",
+  physicalTraitBonus: "physicalTraitBonus",
+  magicalTraitBonus: "magicalTraitBonus",
+  swiftTraitBonus: "swiftTraitBonus",
+  autoTrainAllJobs: "autoTrainAllJobs",
+  autoTrainAllSkills: "autoTrainAllSkills",
+  autoTrainAllAbilities: "autoTrainAllAbilities",
 } as const;
 
 export type AscensionUpgradeId = typeof AscensionUpgradeIdValue[keyof typeof AscensionUpgradeIdValue];
@@ -229,6 +235,7 @@ export interface AscensionUpgradeDefinition {
   effect: (level: number) => number; // Function to calculate next effect (for display)
   unlockConditions?: Array<
     | { type: "bossDefeats"; bossId: string; count: number }
+    | { type: "ascensions"; count: number }
   >;
 }
 

@@ -14,13 +14,17 @@ export const Sorcerer: JobDefinition = {
   traits: [TraitValue.Magical, TraitValue.DPS],
   statBonuses: [
     { stat: StatValue.INT, value: 4.5 },
-    { stat: StatValue.CRIT_D, value: 2.0 }, // +2% crit damage per level
-    { stat: StatValue.CRIT_C, value: 3.5 }, // Moderate crit chance scaling
-    { stat: StatValue.CONC, value: 1.5 },
+    { stat: StatValue.CONC, value: 3.0 },
+    { stat: StatValue.CRIT_C, value: 2.5 },
+    { stat: StatValue.DEX, value: 2.0 },
+    { stat: StatValue.FRT, value: 1.5 },
+    { stat: StatValue.CRIT_D, value: 1.5 },
+    { stat: StatValue.RES, value: 0.5 },
+    { stat: StatValue.CON, value: 0.5 },
   ],
   unlockConditions: [
-    { type: "stat", stat: StatValue.INT, value: 40 },
-    { type: "stat", stat: StatValue.CONC, value: 25 },
+    { type: "stat", stat: StatValue.INT, value: 80 },
+    { type: "stat", stat: StatValue.CONC, value: 50 },
   ],
 };
 
@@ -32,8 +36,12 @@ export const Wizard: JobDefinition = {
   traits: [TraitValue.Magical, TraitValue.Tactical],
   statBonuses: [
     { stat: StatValue.INT, value: 4.0 },
-    { stat: StatValue.CONC, value: 3.5 },
-    { stat: StatValue.RES, value: 2.0 },
+    { stat: StatValue.CONC, value: 4.0 },
+    { stat: StatValue.RES, value: 2.5 },
+    { stat: StatValue.DEX, value: 1.5 },
+    { stat: StatValue.FRT, value: 1.5 },
+    { stat: StatValue.CON, value: 1.0 },
+    { stat: StatValue.AGI, value: 0.5 },
   ],
   unlockConditions: [
     { type: "jobLevel", jobId: "Mage", level: 10 },
@@ -48,13 +56,17 @@ export const Warlock: JobDefinition = {
   traits: [TraitValue.Magical, TraitValue.Support],
   statBonuses: [
     { stat: StatValue.INT, value: 3.5 },
-    { stat: StatValue.FRT, value: 2.5 },
+    { stat: StatValue.CONC, value: 3.0 },
+    { stat: StatValue.FRT, value: 3.0 },
     { stat: StatValue.CON, value: 2.5 },
-    { stat: StatValue.CONC, value: 2.0 },
+    { stat: StatValue.DEX, value: 1.5 },
+    { stat: StatValue.RES, value: 1.0 },
+    { stat: StatValue.TGH, value: 0.5 },
+    { stat: StatValue.AGI, value: 0.5 },
   ],
   unlockConditions: [
     { type: "jobLevel", jobId: "Mage", level: 12 },
-    { type: "stat", stat: StatValue.FRT, value: 30 }, // Mage gives 0 FRT - meaningful requirement
+    { type: "stat", stat: StatValue.FRT, value: 60 }, // Mage gives minimal FRT - meaningful requirement
   ],
 };
 

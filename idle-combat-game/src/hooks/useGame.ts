@@ -4,7 +4,7 @@
 import { useMemo, useEffect } from "react";
 import { useGameEngine } from "./useGameEngine";
 import { useGameUI } from "./useGameUI";
-import { JOB_DATA, BOSS_DATA, SKILL_DATA } from "../core/data";
+import { JOB_DATA, BOSS_DATA, SKILL_DATA, ABILITY_DATA } from "../core/data";
 import { calculateTotalLevels } from "../core/utils";
 import {
   getMaxActiveJobs,
@@ -13,7 +13,7 @@ import {
   getMaxBattleAbilities,
 } from "../core/gameCalculations";
 import { FaBriefcase, FaGraduationCap, FaFistRaised, FaSkull, FaRedoAlt, FaCog } from "react-icons/fa";
-import { GiPathDistance } from "react-icons/gi";
+import { GiPathDistance, GiGoblinHead } from "react-icons/gi";
 import type { TabId } from "./useGameUI";
 import type { BossDefinition, AscensionUpgradeId } from "../types/data";
 
@@ -31,10 +31,15 @@ export const useGame = () => {
     clearUnlockedJobNames,
     unlockedSkillNames,
     clearUnlockedSkillNames,
+    unlockedAbilityNames,
+    clearUnlockedAbilityNames,
     toggleJobActive: engineToggleJobActive,
     toggleSkillActive: engineToggleSkillActive,
     toggleAbilityTraining: engineToggleAbilityTraining,
     toggleAbilityBattle: engineToggleAbilityBattle,
+    toggleAutoTrainingJobs: engineToggleAutoTrainingJobs,
+    toggleAutoTrainingSkills: engineToggleAutoTrainingSkills,
+    toggleAutoTrainingAbilities: engineToggleAutoTrainingAbilities,
     buyAscensionUpgrade: engineBuyUpgrade,
     ascend: engineAscend,
     startBossBattle: engineStartBattle,
@@ -42,6 +47,7 @@ export const useGame = () => {
     calculatePlayerStats: engineCalculateStats,
     resetGame: engineResetGame,
     selectPath: engineSelectPath,
+    purchaseHordeUpgrade: enginePurchaseHordeUpgrade,
   } = useGameEngine();
 
   // UI state
@@ -64,6 +70,15 @@ export const useGame = () => {
       clearUnlockedSkillNames();
     }
   }, [unlockedSkillNames, clearUnlockedSkillNames, showAlert]);
+
+  // Show alert when abilities are unlocked
+  useEffect(() => {
+    if (unlockedAbilityNames.length > 0) {
+      const abilityNames = unlockedAbilityNames.map(id => ABILITY_DATA[id].name).join(", ");
+      showAlert(`New abilit${unlockedAbilityNames.length > 1 ? 'ies' : 'y'} unlocked: ${abilityNames}!`);
+      clearUnlockedAbilityNames();
+    }
+  }, [unlockedAbilityNames, clearUnlockedAbilityNames, showAlert]);
 
   // Calculate derived values
   const playerStats = useMemo(() => engineCalculateStats(), [gameState.jobs, engineCalculateStats]);
@@ -90,6 +105,11 @@ export const useGame = () => {
     // Paths are visible after 10 or more total ascensions
     return gameState.pathState.totalAscensions >= 10;
   }, [gameState.pathState.totalAscensions]);
+  
+  const isHordeVisible = useMemo(() => {
+    // Horde is visible after unlocking (5+ Goblin King defeats)
+    return gameState.hordeState.unlocked;
+  }, [gameState.hordeState.unlocked]);
 
   // Tab definitions
   const tabs: TabDefinition[] = useMemo(() => {
@@ -110,10 +130,15 @@ export const useGame = () => {
       baseTabs.push({ id: "Paths", name: "Paths", icon: GiPathDistance });
     }
     
+    // Only add Horde tab if it's been unlocked
+    if (isHordeVisible) {
+      baseTabs.push({ id: "Horde", name: "Horde", icon: GiGoblinHead });
+    }
+    
     baseTabs.push({ id: "Settings", name: "Settings", icon: FaCog });
     
     return baseTabs;
-  }, [isAscensionVisible, isPathsVisible]);
+  }, [isAscensionVisible, isPathsVisible, isHordeVisible]);
 
   // Wrapper functions that include limits
   const toggleJobActive = (jobId: string) => {
@@ -177,6 +202,15 @@ export const useGame = () => {
       showAlert("Cannot select path - you already have one selected!");
     }
   };
+  
+  const purchaseHordeUpgrade = (upgradeId: string) => {
+    const success = enginePurchaseHordeUpgrade(upgradeId);
+    if (success) {
+      showAlert(`Upgrade purchased! Stat gains increased.`);
+    } else {
+      showAlert("Cannot purchase upgrade - not enough goblins!");
+    }
+  };
 
   return {
     // Game state
@@ -187,6 +221,7 @@ export const useGame = () => {
     currentBossData,
     isAscensionVisible,
     isPathsVisible,
+    isHordeVisible,
     
     // UI state
     activeTab,
@@ -199,12 +234,16 @@ export const useGame = () => {
     toggleSkillActive,
     toggleAbilityTraining,
     toggleAbilityBattle,
+    toggleAutoTrainingJobs: engineToggleAutoTrainingJobs,
+    toggleAutoTrainingSkills: engineToggleAutoTrainingSkills,
+    toggleAutoTrainingAbilities: engineToggleAutoTrainingAbilities,
     buyAscensionUpgrade,
     ascend,
     startBossBattle,
     closeBattle,
     resetGame,
     selectPath,
+    purchaseHordeUpgrade,
   };
 };
 

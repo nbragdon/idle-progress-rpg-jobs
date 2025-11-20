@@ -96,9 +96,11 @@ const AscensionTab: React.FC<AscensionTabProps> = ({ gameState, buyAscensionUpgr
             const currentEffect = currentLevel > 0 ? upgrade.effect(currentLevel) : 0;
             const nextEffect = upgrade.effect(currentLevel + 1);
             
-            // Check if this is a slot upgrade (additive) or multiplier upgrade
+            // Check upgrade type for display suffix
             const isSlotUpgrade = ['maxBattleAbilities', 'maxActiveJobs', 'maxActiveSkills', 'maxActiveAbilities'].includes(upgrade.id);
-            const effectSuffix = isSlotUpgrade ? '' : 'x';
+            const isPercentUpgrade = ['physicalTraitBonus', 'magicalTraitBonus', 'swiftTraitBonus'].includes(upgrade.id);
+            const isAutoUpgrade = ['autoTrainAllJobs', 'autoTrainAllSkills', 'autoTrainAllAbilities'].includes(upgrade.id);
+            const effectSuffix = isSlotUpgrade ? '' : isPercentUpgrade ? '%' : isAutoUpgrade ? '' : 'x';
 
             return (
               <div
@@ -135,24 +137,33 @@ const AscensionTab: React.FC<AscensionTabProps> = ({ gameState, buyAscensionUpgr
                       <div className="mb-3 p-2 rounded-lg bg-slate-800/50 border border-slate-700/50">
                         <p className="text-xs text-slate-500">
                           🔒 Unlock requirement:{" "}
-                          {upgrade.unlockConditions.map((cond) => {
+                          {upgrade.unlockConditions.map((cond, index) => {
                             if (cond.type === "bossDefeats") {
                               const progress = gameState.bossProgress[cond.bossId]?.defeated || 0;
                               return `Defeat ${cond.bossId.replace(/([A-Z])/g, ' $1').trim()} ${progress}/${cond.count} times`;
                             }
+                            if (cond.type === "ascensions") {
+                              const progress = gameState.pathState.totalAscensions;
+                              return `Complete ${progress}/${cond.count} ascensions`;
+                            }
                             return "";
-                          }).join(", ")}
+                          }).filter(Boolean).join(", ")}
                         </p>
                       </div>
                     )}
                     <div className="flex items-center gap-4 text-sm">
-                      {currentLevel > 0 && (
+                      {currentLevel > 0 && !isAutoUpgrade && (
                         <div>
                           <span className="text-slate-500">Current: </span>
                           <span className="text-teal-400 font-semibold">+{currentEffect}{effectSuffix}</span>
                         </div>
                       )}
-                      {!isMaxLevel && isUnlocked && (
+                      {currentLevel > 0 && isAutoUpgrade && (
+                        <div>
+                          <span className="text-teal-400 font-semibold">✓ Active</span>
+                        </div>
+                      )}
+                      {!isMaxLevel && isUnlocked && !isAutoUpgrade && (
                         <div>
                           <span className="text-slate-500">Next: </span>
                           <span className="text-white font-semibold">+{nextEffect}{effectSuffix}</span>

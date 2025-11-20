@@ -13,6 +13,7 @@ interface SkillsTabProps {
   gameState: GameState;
   maxActiveSkills: number;
   toggleSkillActive: (skillId: string) => void;
+  toggleAutoTrainingSkills: () => void;
 }
 
 const SkillsTab: React.FC<SkillsTabProps> = ({
@@ -20,6 +21,7 @@ const SkillsTab: React.FC<SkillsTabProps> = ({
   gameState,
   maxActiveSkills,
   toggleSkillActive,
+  toggleAutoTrainingSkills,
 }) => {
   // Modal state
   const [selectedSkillId, setSelectedSkillId] = useState<string | null>(null);
@@ -48,6 +50,9 @@ const SkillsTab: React.FC<SkillsTabProps> = ({
   const selectedSkillData = selectedSkillId ? SKILL_DATA[selectedSkillId] as SkillDefinition : null;
   const selectedSkillLevel = selectedSkill ? calculateLevelFromExp(selectedSkill.exp) : null;
 
+  // Check if auto-training is enabled
+  const hasAutoTraining = (gameState.permanentUpgrades.autoTrainAllSkills || 0) > 0;
+
   return (
     <div className="space-y-6 animate-fade-in">
       {/* Header */}
@@ -60,6 +65,35 @@ const SkillsTab: React.FC<SkillsTabProps> = ({
           </p>
         </div>
       </div>
+      
+      {/* Auto-Training Banner */}
+      {(gameState.permanentUpgrades.autoTrainAllSkills || 0) > 0 && (
+        <div className="rounded-xl bg-gradient-to-r from-purple-500/20 to-amber-500/20 border border-purple-500/30 p-4">
+          <div className="flex items-center justify-between gap-4">
+            <div className="flex items-center gap-3">
+              <div className="text-2xl">✨</div>
+              <div>
+                <h3 className="text-lg font-semibold text-white">Universal Mastery</h3>
+                <p className="text-sm text-slate-300">
+                  {gameState.settings.autoTrainingEnabled.skills 
+                    ? "All unlocked skills are automatically training" 
+                    : "Auto-training disabled - toggle to re-enable"}
+                </p>
+              </div>
+            </div>
+            <button
+              onClick={toggleAutoTrainingSkills}
+              className={`px-4 py-2 rounded-lg font-semibold text-sm transition-all ${
+                gameState.settings.autoTrainingEnabled.skills
+                  ? "bg-amber-500 text-white hover:brightness-110"
+                  : "bg-slate-700 text-slate-300 hover:bg-slate-600"
+              }`}
+            >
+              {gameState.settings.autoTrainingEnabled.skills ? "ON" : "OFF"}
+            </button>
+          </div>
+        </div>
+      )}
 
       {/* Compact Skill Grid */}
       <div className="grid gap-4 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3">

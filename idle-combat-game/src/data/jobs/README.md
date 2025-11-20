@@ -116,12 +116,22 @@ export const getJobsByTier = () => ({
 
 ## Job Definition Guidelines
 
+### Stat Distribution (CRITICAL - READ FIRST!)
+
+**See `STAT_DISTRIBUTION_GUIDE.md` in the project root for comprehensive stat balancing guidelines.**
+
+All jobs must follow the stat distribution ratios defined in that guide to ensure game balance. Key points:
+- All stats must maintain minimum thresholds (≥65 total across all jobs, except CRIT_D at ~35)
+- DEX, CON, CONC are universal stats and must appear frequently across all archetypes
+- Each archetype has primary and secondary stat focuses
+- Maintaining proper ratios prevents any single stat from dominating gameplay
+
 ### Stat Bonuses by Tier
 
-- **Basic (Tier 0)**: 1.0 - 2.0 per level
-- **Tier 1**: 1.5 - 3.5 per level
-- **Tier 2**: 2.5 - 5.0 per level
-- **Tier 3+**: 4.0+ per level
+- **Basic (Tier 0)**: 7-9 total points per level
+- **Tier 1**: 13-16 total points per level
+- **Tier 2**: 27-34 total points per level
+- **Tier 2 Specialists**: 35-43 total points per level
 
 ### Unlock Conditions
 

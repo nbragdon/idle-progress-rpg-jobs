@@ -3,7 +3,7 @@
 
 import { useState, useCallback } from "react";
 
-export type TabId = "Jobs" | "Skills" | "Abilities" | "Boss" | "Ascension" | "Paths" | "Settings";
+export type TabId = "Jobs" | "Skills" | "Abilities" | "Boss" | "Ascension" | "Paths" | "Horde" | "Settings";
 
 interface AlertState {
   message: string;

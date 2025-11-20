@@ -13,10 +13,15 @@ export const Juggernaut: JobDefinition = {
   icon: GiMountains,
   traits: [TraitValue.Tank, TraitValue.Aggressive, TraitValue.Physical],
   statBonuses: [
-    { stat: StatValue.STR, value: 7.5 },
+    { stat: StatValue.CON, value: 8.0 },
+    { stat: StatValue.STR, value: 7.0 },
     { stat: StatValue.TGH, value: 6.0 },
-    { stat: StatValue.CON, value: 5.5 },
-    { stat: StatValue.CRIT_D, value: 3.0 },
+    { stat: StatValue.CRIT_D, value: 2.5 },
+    { stat: StatValue.DEX, value: 2.0 },
+    { stat: StatValue.CONC, value: 1.5 },
+    { stat: StatValue.FRT, value: 1.0 },
+    { stat: StatValue.AGI, value: 0.5 },
+    { stat: StatValue.RES, value: 0.5 },
   ],
   unlockConditions: [
     { type: "jobLevel", jobId: "Guardian", level: 18 },
@@ -32,10 +37,15 @@ export const Warlord: JobDefinition = {
   icon: GiCrownedSkull,
   traits: [TraitValue.Tactical, TraitValue.Physical, TraitValue.Support],
   statBonuses: [
-    { stat: StatValue.INT, value: 7.0 },
     { stat: StatValue.STR, value: 6.0 },
-    { stat: StatValue.FRT, value: 4.5 },
+    { stat: StatValue.INT, value: 5.0 },
+    { stat: StatValue.CON, value: 4.5 },
     { stat: StatValue.CONC, value: 4.0 },
+    { stat: StatValue.DEX, value: 2.5 },
+    { stat: StatValue.FRT, value: 2.5 },
+    { stat: StatValue.TGH, value: 2.0 },
+    { stat: StatValue.AGI, value: 1.0 },
+    { stat: StatValue.RES, value: 0.5 },
   ],
   unlockConditions: [
     { type: "jobLevel", jobId: "Commander", level: 24 },
@@ -51,15 +61,20 @@ export const Berserker: JobDefinition = {
   icon: GiFlame,
   traits: [TraitValue.Aggressive, TraitValue.Physical, TraitValue.DPS],
   statBonuses: [
-    { stat: StatValue.STR, value: 9.0 },
+    { stat: StatValue.STR, value: 8.5 },
+    { stat: StatValue.CRIT_C, value: 5.0 },
     { stat: StatValue.CRIT_D, value: 4.5 },
-    { stat: StatValue.CRIT_C, value: 6.0 },
-    { stat: StatValue.TGH, value: 0.5 },
+    { stat: StatValue.CON, value: 2.5 },
+    { stat: StatValue.TGH, value: 2.0 },
+    { stat: StatValue.DEX, value: 2.0 },
+    { stat: StatValue.AGI, value: 1.5 },
+    { stat: StatValue.CONC, value: 1.0 },
+    { stat: StatValue.FRT, value: 0.5 },
   ],
   unlockConditions: [
     { type: "jobLevel", jobId: "Barbarian", level: 24 },
     { type: "bossDefeats", bossId: "TrainingDummy", count: 12 },
-    { type: "stat", stat: StatValue.CRIT_D, value: 120 }, // Barbarian 24 only gives 48 CRIT_D - meaningful crit damage requirement
+    { type: "stat", stat: StatValue.CRIT_D, value: 180 }, // Barbarian 24 gives 60 CRIT_D - meaningful crit damage requirement
   ],
 };
 

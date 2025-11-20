@@ -131,6 +131,21 @@ export interface PathState {
   totalAscensions: number; // Total number of ascensions completed (persists through resets)
 }
 
+// --- Horde State ---
+
+export interface HordeUpgrade {
+  id: string;
+  level: number;
+}
+
+export interface HordeState {
+  goblins: number; // Current goblin count
+  goblinGeneration: number; // Goblins generated per second
+  upgrades: Record<string, HordeUpgrade>; // Track upgrade levels
+  totalLevels: number; // Sum of all upgrade levels (for cost calculation)
+  unlocked: boolean; // Unlocked after defeating Goblin King 5+ times (persists through ascension)
+}
+
 // --- Main Game State ---
 
 export interface GameState {
@@ -150,11 +165,23 @@ export interface GameState {
   currentBossId: BossDefinition["id"];
   bossProgress: Record<BossDefinition["id"], BossProgress>; // Tracks defeats per boss
   lastTickTime: number;
-  activeTab: "Jobs" | "Stats" | "Skills" | "Abilities" | "Boss" | "Ascension" | "Paths";
+  activeTab: "Jobs" | "Stats" | "Skills" | "Abilities" | "Boss" | "Ascension" | "Paths" | "Horde";
+  
+  // Settings/Preferences
+  settings: {
+    autoTrainingEnabled: {
+      jobs: boolean;
+      skills: boolean;
+      abilities: boolean;
+    };
+  };
   
   // Active Battle
   battleState: BattleState | null;
   
   // Paths System
   pathState: PathState;
+  
+  // Horde System
+  hordeState: HordeState;
 }

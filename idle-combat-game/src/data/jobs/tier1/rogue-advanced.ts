@@ -14,8 +14,12 @@ export const Shadow: JobDefinition = {
   traits: [TraitValue.Stealth, TraitValue.Swift],
   statBonuses: [
     { stat: StatValue.AGI, value: 4.0 },
-    { stat: StatValue.DEX, value: 2.5 },
-    { stat: StatValue.CRIT_C, value: 6.5 }, // High crit chance scaling
+    { stat: StatValue.DEX, value: 3.5 },
+    { stat: StatValue.CRIT_C, value: 4.5 },
+    { stat: StatValue.CONC, value: 1.5 },
+    { stat: StatValue.CON, value: 1.0 },
+    { stat: StatValue.FRT, value: 0.5 },
+    { stat: StatValue.CRIT_D, value: 0.5 },
   ],
   unlockConditions: [
     { type: "jobLevel", jobId: "Rogue", level: 10 },
@@ -30,12 +34,16 @@ export const Thief: JobDefinition = {
   traits: [TraitValue.Opportunist, TraitValue.Swift],
   statBonuses: [
     { stat: StatValue.DEX, value: 4.5 },
-    { stat: StatValue.CRIT_D, value: 2.5 }, // +2.5% crit damage per level
-    { stat: StatValue.CRIT_C, value: 4.0 }, // Moderate crit chance scaling
+    { stat: StatValue.CRIT_C, value: 3.5 },
+    { stat: StatValue.CRIT_D, value: 3.0 },
+    { stat: StatValue.AGI, value: 2.0 },
+    { stat: StatValue.CONC, value: 1.5 },
+    { stat: StatValue.CON, value: 1.5 },
+    { stat: StatValue.STR, value: 0.5 },
   ],
   unlockConditions: [
-    { type: "stat", stat: StatValue.DEX, value: 40 },
-    { type: "stat", stat: StatValue.AGI, value: 25 },
+    { type: "stat", stat: StatValue.DEX, value: 120 },
+    { type: "stat", stat: StatValue.AGI, value: 60 },
   ],
 };
 
@@ -46,14 +54,17 @@ export const Skirmisher: JobDefinition = {
   icon: GiNinjaHeroicStance,
   traits: [TraitValue.Skirmish, TraitValue.Swift],
   statBonuses: [
-    { stat: StatValue.AGI, value: 3.5 },
-    { stat: StatValue.DEX, value: 2.5 },
-    { stat: StatValue.CON, value: 2.5 },
-    { stat: StatValue.FRT, value: 2.0 },
+    { stat: StatValue.AGI, value: 4.0 },
+    { stat: StatValue.DEX, value: 3.0 },
+    { stat: StatValue.CON, value: 3.0 },
+    { stat: StatValue.CONC, value: 2.0 },
+    { stat: StatValue.FRT, value: 1.5 },
+    { stat: StatValue.STR, value: 1.0 },
+    { stat: StatValue.TGH, value: 0.5 },
   ],
   unlockConditions: [
     { type: "jobLevel", jobId: "Rogue", level: 12 },
-    { type: "stat", stat: StatValue.AGI, value: 30 }, // Requires slightly more AGI than Rogue 12 provides (24)
+    { type: "stat", stat: StatValue.AGI, value: 90 }, // Requires slightly more AGI than Rogue 12 provides
   ],
 };
 

@@ -112,6 +112,16 @@ export const useGameEngine = () => {
     }
   }, [gameState.skills, engine]);
 
+  // Check for ability unlocks when state changes
+  const [unlockedAbilityNames, setUnlockedAbilityNames] = useState<string[]>([]);
+  
+  useEffect(() => {
+    const newlyUnlocked = engine.checkAbilityUnlocks();
+    if (newlyUnlocked.length > 0) {
+      setUnlockedAbilityNames(newlyUnlocked);
+    }
+  }, [gameState.jobs, gameState.abilities, gameState.skills, engine]);
+
   // Wrap engine methods in callbacks
   const toggleJobActive = useCallback((jobId: string, maxActiveJobs: number) => {
     return engine.toggleJobActive(jobId, maxActiveJobs);
@@ -127,6 +137,18 @@ export const useGameEngine = () => {
 
   const toggleAbilityBattle = useCallback((abilityId: string, maxBattleAbilities: number) => {
     return engine.toggleAbilityBattle(abilityId, maxBattleAbilities);
+  }, [engine]);
+
+  const toggleAutoTrainingJobs = useCallback(() => {
+    engine.toggleAutoTrainingJobs();
+  }, [engine]);
+
+  const toggleAutoTrainingSkills = useCallback(() => {
+    engine.toggleAutoTrainingSkills();
+  }, [engine]);
+
+  const toggleAutoTrainingAbilities = useCallback(() => {
+    engine.toggleAutoTrainingAbilities();
   }, [engine]);
 
   const buyAscensionUpgrade = useCallback((upgradeId: AscensionUpgradeId, cost: number) => {
@@ -164,6 +186,10 @@ export const useGameEngine = () => {
     return engine.selectPath(pathId);
   }, [engine]);
 
+  const purchaseHordeUpgrade = useCallback((upgradeId: string) => {
+    return engine.purchaseHordeUpgrade(upgradeId);
+  }, [engine]);
+
   return {
     gameState,
     engine,
@@ -171,12 +197,17 @@ export const useGameEngine = () => {
     clearUnlockedJobNames: () => setUnlockedJobNames([]),
     unlockedSkillNames,
     clearUnlockedSkillNames: () => setUnlockedSkillNames([]),
+    unlockedAbilityNames,
+    clearUnlockedAbilityNames: () => setUnlockedAbilityNames([]),
     
     // Game actions
     toggleJobActive,
     toggleSkillActive,
     toggleAbilityTraining,
     toggleAbilityBattle,
+    toggleAutoTrainingJobs,
+    toggleAutoTrainingSkills,
+    toggleAutoTrainingAbilities,
     buyAscensionUpgrade,
     ascend,
     startBossBattle,
@@ -184,6 +215,7 @@ export const useGameEngine = () => {
     calculatePlayerStats,
     resetGame,
     selectPath,
+    purchaseHordeUpgrade,
   };
 };
 

@@ -87,13 +87,13 @@ export const STAT_MAP: Record<StatId, StatDefinition> = {
   [StatValue.CONC]: {
     id: StatValue.CONC,
     name: "Concentration",
-    desc: "Reserved for future status effect mechanics. Currently not used in combat.",
+    desc: "Increases status effect application chance. Higher CONC makes it easier to apply status effects against opponent's RES.",
     icon: FaBolt, // Bolt -> FaBolt
   },
   [StatValue.RES]: {
     id: StatValue.RES,
     name: "Resistance",
-    desc: "Reserved for future status effect mechanics. Currently not used in combat.",
+    desc: "Increases status effect resistance. Higher RES makes it harder for opponents to apply status effects.",
     icon: FaSyncAlt, // RefreshCw -> FaSyncAlt
   },
   [StatValue.CRIT_C]: {
@@ -177,29 +177,83 @@ export const ASCENSION_UPGRADES: AscensionUpgradeDefinition[] = [
   },
   {
     id: "maxActiveJobs",
-    name: "Active Job Slots",
-    description: "Increases the number of jobs you can train simultaneously by 1 per level.",
-    maxLevel: 3,
-    cost: (lvl) => [5, 30, 150][lvl] || 150, // Level 1: 5 AP, Level 2: 30 AP, Level 3: 150 AP
-    effect: (lvl) => lvl, // +1 slot per level
+    name: "Dual Job Training",
+    description: "Train 2 jobs simultaneously. Essential early-game upgrade before unlocking Omnipresent Training.",
+    maxLevel: 1,
+    cost: (lvl) => 5, // 5 AP
+    effect: (lvl) => lvl, // +1 slot
     unlockConditions: [{ type: "bossDefeats", bossId: "TrainingDummy", count: 3 }],
   },
   {
     id: "maxActiveSkills",
-    name: "Active Skill Slots",
-    description: "Increases the number of skills you can train simultaneously by 1 per level.",
-    maxLevel: 3,
-    cost: (lvl) => [5, 30, 150][lvl] || 150, // Level 1: 5 AP, Level 2: 30 AP, Level 3: 150 AP
-    effect: (lvl) => lvl, // +1 slot per level
+    name: "Dual Skill Training",
+    description: "Train 2 skills simultaneously. Essential early-game upgrade before unlocking Universal Mastery.",
+    maxLevel: 1,
+    cost: (lvl) => 5, // 5 AP
+    effect: (lvl) => lvl, // +1 slot
     unlockConditions: [{ type: "bossDefeats", bossId: "TrainingDummy", count: 3 }],
   },
   {
     id: "maxActiveAbilities",
-    name: "Training Ability Slots",
-    description: "Increases the number of abilities you can train simultaneously by 1 per level.",
-    maxLevel: 3,
-    cost: (lvl) => [5, 30, 150][lvl] || 150, // Level 1: 5 AP, Level 2: 30 AP, Level 3: 150 AP
-    effect: (lvl) => lvl, // +1 slot per level
+    name: "Dual Ability Training",
+    description: "Train 2 abilities simultaneously. Essential early-game upgrade before unlocking Perfect Practice.",
+    maxLevel: 1,
+    cost: (lvl) => 5, // 5 AP
+    effect: (lvl) => lvl, // +1 slot
     unlockConditions: [{ type: "bossDefeats", bossId: "TrainingDummy", count: 3 }],
+  },
+  {
+    id: "physicalTraitBonus",
+    name: "Physical Mastery",
+    description: "Increases stats from Physical jobs by 50% per level.",
+    maxLevel: 5,
+    cost: (lvl) => [15, 20, 25, 30, 35][lvl] || 35, // 15, 20, 25, 30, 35 AP
+    effect: (lvl) => lvl * 50, // 50% per level
+    unlockConditions: [{ type: "ascensions", count: 15 }],
+  },
+  {
+    id: "magicalTraitBonus",
+    name: "Magical Mastery",
+    description: "Increases stats from Magical jobs by 50% per level.",
+    maxLevel: 5,
+    cost: (lvl) => [15, 20, 25, 30, 35][lvl] || 35, // 15, 20, 25, 30, 35 AP
+    effect: (lvl) => lvl * 50, // 50% per level
+    unlockConditions: [{ type: "ascensions", count: 15 }],
+  },
+  {
+    id: "swiftTraitBonus",
+    name: "Swift Mastery",
+    description: "Increases stats from Swift jobs by 50% per level.",
+    maxLevel: 5,
+    cost: (lvl) => [15, 20, 25, 30, 35][lvl] || 35, // 15, 20, 25, 30, 35 AP
+    effect: (lvl) => lvl * 50, // 50% per level
+    unlockConditions: [{ type: "ascensions", count: 15 }],
+  },
+  {
+    id: "autoTrainAllJobs",
+    name: "Omnipresent Training",
+    description: "Automatically trains ALL unlocked jobs simultaneously. No need to select which jobs to train.",
+    maxLevel: 1,
+    cost: (lvl) => 50, // 50 AP
+    effect: (lvl) => lvl, // Just indicates purchased
+    unlockConditions: [{ type: "bossDefeats", bossId: "AncientDragon", count: 1 }],
+  },
+  {
+    id: "autoTrainAllSkills",
+    name: "Universal Mastery",
+    description: "Automatically trains ALL unlocked skills simultaneously. No need to select which skills to train.",
+    maxLevel: 1,
+    cost: (lvl) => 50, // 50 AP
+    effect: (lvl) => lvl, // Just indicates purchased
+    unlockConditions: [{ type: "bossDefeats", bossId: "AncientDragon", count: 1 }],
+  },
+  {
+    id: "autoTrainAllAbilities",
+    name: "Perfect Practice",
+    description: "Automatically trains ALL unlocked abilities simultaneously. No need to select which abilities to train.",
+    maxLevel: 1,
+    cost: (lvl) => 50, // 50 AP
+    effect: (lvl) => lvl, // Just indicates purchased
+    unlockConditions: [{ type: "bossDefeats", bossId: "AncientDragon", count: 1 }],
   },
 ];

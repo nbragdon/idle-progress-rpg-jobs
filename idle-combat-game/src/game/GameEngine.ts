@@ -3,8 +3,10 @@
 
 import type { GameState, PlayerStats, JobState, SkillState, BattleState } from "../types/game";
 import { JOB_DATA, SKILL_DATA, ABILITY_DATA, BOSS_DATA, PATH_DATA } from "../core/data";
+import { HORDE_UPGRADES, calculateUpgradeCost } from "../data/horde";
 import { 
   calculateLevelFromExp, 
+  calculateTotalLevels,
   isJobUnlocked, 
   isJobAvailable,
   isSkillUnlocked,
@@ -21,7 +23,8 @@ import {
   calculateCritChance,
   calculateHitChance,
   getEffectiveCooldown,
-  getEffectiveBaseDamage
+  getEffectiveBaseDamage,
+  calculateStatusEffectChance
 } from "../core/combatSystem";
 import {
   updateStatusEffects,
@@ -97,10 +100,58 @@ export class GameEngine {
       const { level } = calculateLevelFromExp(job.exp);
       const jobData = JOB_DATA[jobId];
       if (jobData && level > 0) {
+        // Calculate total multiplier for this job
+        let totalMultiplier = 1.0;
+        
+        // Apply Horde multipliers
+        if (this.state.hordeState.unlocked) {
+          Object.values(HORDE_UPGRADES).forEach(upgrade => {
+            const upgradeState = this.state.hordeState.upgrades[upgrade.id];
+            if (upgradeState && upgradeState.level > 0) {
+              // Check if job has any of the upgrade's traits
+              const hasMatchingTrait = jobData.traits?.some(trait => upgrade.traits.includes(trait));
+              if (hasMatchingTrait) {
+                // Apply multiplier: 1 + (level * multiplierPerLevel)
+                // e.g., level 1 with 0.25 = 1.25x, level 2 = 1.5x
+                totalMultiplier *= (1 + (upgradeState.level * upgrade.statMultiplierPerLevel));
+              }
+            }
+          });
+        }
+        
+        // Apply Trait Mastery upgrades (Physical, Magical, Swift)
+        const traits = jobData.traits || [];
+        if (traits.includes("Physical")) {
+          const physicalLevel = this.state.permanentUpgrades.physicalTraitBonus || 0;
+          if (physicalLevel > 0) {
+            totalMultiplier *= (1 + (physicalLevel * 0.5)); // 50% per level
+          }
+        }
+        if (traits.includes("Magical")) {
+          const magicalLevel = this.state.permanentUpgrades.magicalTraitBonus || 0;
+          if (magicalLevel > 0) {
+            totalMultiplier *= (1 + (magicalLevel * 0.5)); // 50% per level
+          }
+        }
+        if (traits.includes("Swift")) {
+          const swiftLevel = this.state.permanentUpgrades.swiftTraitBonus || 0;
+          if (swiftLevel > 0) {
+            totalMultiplier *= (1 + (swiftLevel * 0.5)); // 50% per level
+          }
+        }
+        
         jobData.statBonuses.forEach((bonus) => {
-          stats[bonus.stat] += bonus.value * level;
+          // Round to 1 decimal place
+          const statGain = Math.round(bonus.value * level * totalMultiplier * 10) / 10;
+          stats[bonus.stat] += statGain;
         });
       }
+    });
+
+    // Round all final accumulated stats to 1 decimal place to prevent floating point errors
+    Object.keys(stats).forEach((statKey) => {
+      const key = statKey as keyof PlayerStats;
+      stats[key] = Math.round(stats[key] * 10) / 10;
     });
 
     return stats;
@@ -129,6 +180,54 @@ export class GameEngine {
     let hasChanges = false;
     const now = Date.now();
     const newState = { ...this.state, lastTickTime: now };
+
+    // Auto-activate all unlocked jobs/skills/abilities if upgrades are purchased AND enabled
+    const hasAutoJobs = (this.state.permanentUpgrades.autoTrainAllJobs || 0) > 0 && this.state.settings.autoTrainingEnabled.jobs;
+    const hasAutoSkills = (this.state.permanentUpgrades.autoTrainAllSkills || 0) > 0 && this.state.settings.autoTrainingEnabled.skills;
+    const hasAutoAbilities = (this.state.permanentUpgrades.autoTrainAllAbilities || 0) > 0 && this.state.settings.autoTrainingEnabled.abilities;
+    
+    if (hasAutoJobs) {
+      // Auto-activate all unlocked jobs
+      Object.keys(newState.jobs).forEach(jobId => {
+        const jobDef = JOB_DATA[jobId];
+        const job = newState.jobs[jobId];
+        if (jobDef && !job.isActive) {
+          const playerStats = this.calculatePlayerStats();
+          if (isJobUnlocked(jobDef, newState, playerStats) && isJobAvailable(jobDef, newState)) {
+            newState.jobs[jobId] = { ...job, isActive: true };
+            hasChanges = true;
+          }
+        }
+      });
+    }
+    
+    if (hasAutoSkills) {
+      // Auto-activate all unlocked skills
+      Object.keys(newState.skills).forEach(skillId => {
+        const skillDef = SKILL_DATA[skillId];
+        const skill = newState.skills[skillId];
+        if (skillDef && !skill.isActive) {
+          if (isSkillUnlocked(skillDef, newState) && isSkillAvailable(skillDef, newState)) {
+            newState.skills[skillId] = { ...skill, isActive: true };
+            hasChanges = true;
+          }
+        }
+      });
+    }
+    
+    if (hasAutoAbilities) {
+      // Auto-activate all unlocked abilities for training
+      Object.keys(newState.abilities).forEach(abilityId => {
+        const abilityDef = ABILITY_DATA[abilityId];
+        const ability = newState.abilities[abilityId];
+        if (abilityDef && ability.unlocked && !ability.isTraining) {
+          if (isAbilityUnlocked(abilityDef, newState) && isAbilityAvailable(abilityDef, newState)) {
+            newState.abilities[abilityId] = { ...ability, isTraining: true };
+            hasChanges = true;
+          }
+        }
+      });
+    }
 
     // Calculate skill bonuses - ALL skills apply regardless of training status
     const skillBonuses: Record<string, number> = {}; // trait -> bonus multiplier
@@ -252,6 +351,21 @@ export class GameEngine {
       }
     });
 
+    // Generate goblins if Horde is unlocked
+    if (newState.hordeState.unlocked) {
+      // Calculate goblin generation rate: 1 base + 1 per 100 total job levels
+      const totalLevels = calculateTotalLevels(newState);
+      const goblinGeneration = Math.max(1, 1 + (totalLevels / 100));
+      
+      const goblinGain = goblinGeneration * deltaTime;
+      newState.hordeState = {
+        ...newState.hordeState,
+        goblins: newState.hordeState.goblins + goblinGain,
+        goblinGeneration: goblinGeneration, // Update the rate for display
+      };
+      hasChanges = true;
+    }
+
     if (hasChanges) {
       this.setState({
         ...newState,
@@ -334,6 +448,41 @@ export class GameEngine {
     }
 
     return newlyUnlockedSkills;
+  }
+
+  // Check for and unlock new abilities
+  checkAbilityUnlocks(): string[] {
+    const playerStats = this.calculatePlayerStats();
+    const newlyUnlockedAbilities: string[] = [];
+    let newAbilities: Record<string, typeof this.state.abilities[string]> | null = null;
+
+    Object.entries(ABILITY_DATA).forEach(([abilityId, abilityDef]) => {
+      // Skip if ability is already unlocked
+      if (isAbilityAvailable(abilityId, this.state)) return;
+
+      // Check if ability requirements are met
+      if (isAbilityUnlocked(abilityDef, this.state, playerStats)) {
+        if (!newAbilities) {
+          newAbilities = { ...this.state.abilities };
+        }
+        // Unlock the ability
+        newAbilities[abilityId] = {
+          ...this.state.abilities[abilityId],
+          unlocked: true,
+        };
+        newlyUnlockedAbilities.push(abilityId);
+      }
+    });
+
+    // Update state if we unlocked any new abilities
+    if (newAbilities) {
+      this.setState({
+        ...this.state,
+        abilities: newAbilities,
+      });
+    }
+
+    return newlyUnlockedAbilities;
   }
 
   // Toggle job active status
@@ -513,6 +662,46 @@ export class GameEngine {
     return true;
   }
 
+  // Toggle auto-training settings
+  toggleAutoTrainingJobs(): void {
+    this.setState({
+      ...this.state,
+      settings: {
+        ...this.state.settings,
+        autoTrainingEnabled: {
+          ...this.state.settings.autoTrainingEnabled,
+          jobs: !this.state.settings.autoTrainingEnabled.jobs,
+        },
+      },
+    });
+  }
+
+  toggleAutoTrainingSkills(): void {
+    this.setState({
+      ...this.state,
+      settings: {
+        ...this.state.settings,
+        autoTrainingEnabled: {
+          ...this.state.settings.autoTrainingEnabled,
+          skills: !this.state.settings.autoTrainingEnabled.skills,
+        },
+      },
+    });
+  }
+
+  toggleAutoTrainingAbilities(): void {
+    this.setState({
+      ...this.state,
+      settings: {
+        ...this.state.settings,
+        autoTrainingEnabled: {
+          ...this.state.settings.autoTrainingEnabled,
+          abilities: !this.state.settings.autoTrainingEnabled.abilities,
+        },
+      },
+    });
+  }
+
   // Buy ascension upgrade
   buyAscensionUpgrade(upgradeId: AscensionUpgradeId, cost: number): boolean {
     if (this.state.ascensionPoints < cost) return false;
@@ -556,6 +745,52 @@ export class GameEngine {
     return true;
   }
 
+  // --- Horde System Methods ---
+
+  /**
+   * Purchase a Horde upgrade with goblins
+   * Cost increases exponentially based on total levels purchased
+   */
+  purchaseHordeUpgrade(upgradeId: string): boolean {
+    const upgradeDef = HORDE_UPGRADES[upgradeId];
+    if (!upgradeDef) {
+      return false;
+    }
+
+    // Check if Horde is unlocked
+    if (!this.state.hordeState.unlocked) {
+      return false;
+    }
+
+    // Calculate cost based on total levels
+    const cost = calculateUpgradeCost(upgradeDef.baseCost, this.state.hordeState.totalLevels);
+
+    // Check if player has enough goblins
+    if (this.state.hordeState.goblins < cost) {
+      return false;
+    }
+
+    // Purchase the upgrade
+    const currentUpgrade = this.state.hordeState.upgrades[upgradeId];
+    this.setState({
+      ...this.state,
+      hordeState: {
+        ...this.state.hordeState,
+        goblins: this.state.hordeState.goblins - cost,
+        upgrades: {
+          ...this.state.hordeState.upgrades,
+          [upgradeId]: {
+            ...currentUpgrade,
+            level: currentUpgrade.level + 1,
+          },
+        },
+        totalLevels: this.state.hordeState.totalLevels + 1,
+      },
+    });
+
+    return true;
+  }
+
   // Ascend (reset with ascension points)
   ascend(): void {
     // Convert potential points to actual points
@@ -578,6 +813,17 @@ export class GameEngine {
         selectedPathId: null, // Reset path selection
         selectionTime: 0,
         totalAscensions: newTotalAscensions, // Keep and increment total ascensions
+      },
+      hordeState: {
+        goblins: 0, // Reset goblins
+        goblinGeneration: 1,
+        upgrades: {
+          Physical: { id: "Physical", level: 0 },
+          Magical: { id: "Magical", level: 0 },
+          Swift: { id: "Swift", level: 0 },
+        },
+        totalLevels: 0, // Reset levels
+        unlocked: this.state.hordeState.unlocked, // Keep unlocked status
       },
     });
   }
@@ -855,37 +1101,72 @@ export class GameEngine {
                 type: "player",
               });
             }
-            // All other effects apply to boss
+            // All other effects apply to boss (with resistance check)
             else {
-              battleState.bossStatusEffects = addOrRefreshStatusEffect(
-                battleState.bossStatusEffects,
-                statusEffect
+              // Check if status effect is resisted
+              const applicationChance = calculateStatusEffectChance(
+                battleState.playerStats[StatValue.CONC],
+                battleState.bossStats[StatValue.RES]
               );
+              const applied = Math.random() < applicationChance;
               
-              let effectMsg = "";
-              switch (statusEffect.type) {
-                case StatusEffectValue.Stun:
-                  effectMsg = `Stunned for ${statusEffect.duration.toFixed(1)}s`;
-                  break;
-                case StatusEffectValue.Poison:
-                  effectMsg = `Poisoned (${Math.round(statusEffect.value)} dmg/s) for ${statusEffect.duration.toFixed(1)}s`;
-                  break;
-                case StatusEffectValue.Disarm:
-                  effectMsg = `Disarmed for ${statusEffect.duration.toFixed(1)}s`;
-                  break;
-                case StatusEffectValue.Silence:
-                  effectMsg = `Silenced for ${statusEffect.duration.toFixed(1)}s`;
-                  break;
-                case StatusEffectValue.Weak:
-                  effectMsg = `Weakened (${statusEffect.value.toFixed(0)}% less damage) for ${statusEffect.duration.toFixed(1)}s`;
-                  break;
+              if (applied) {
+                battleState.bossStatusEffects = addOrRefreshStatusEffect(
+                  battleState.bossStatusEffects,
+                  statusEffect
+                );
+                
+                let effectMsg = "";
+                switch (statusEffect.type) {
+                  case StatusEffectValue.Stun:
+                    effectMsg = `Stunned for ${statusEffect.duration.toFixed(1)}s`;
+                    break;
+                  case StatusEffectValue.Poison:
+                    effectMsg = `Poisoned (${Math.round(statusEffect.value)} dmg/s) for ${statusEffect.duration.toFixed(1)}s`;
+                    break;
+                  case StatusEffectValue.Disarm:
+                    effectMsg = `Disarmed for ${statusEffect.duration.toFixed(1)}s`;
+                    break;
+                  case StatusEffectValue.Silence:
+                    effectMsg = `Silenced for ${statusEffect.duration.toFixed(1)}s`;
+                    break;
+                  case StatusEffectValue.Weak:
+                    effectMsg = `Weakened (${statusEffect.value.toFixed(0)}% less damage) for ${statusEffect.duration.toFixed(1)}s`;
+                    break;
+                }
+                
+                battleState.log.push({
+                  time: battleState.battleTime,
+                  message: `${battleState.bossName} ${effectMsg}`,
+                  type: "player",
+                });
+              } else {
+                // Status effect resisted
+                let effectName = "";
+                switch (statusEffect.type) {
+                  case StatusEffectValue.Stun:
+                    effectName = "Stun";
+                    break;
+                  case StatusEffectValue.Poison:
+                    effectName = "Poison";
+                    break;
+                  case StatusEffectValue.Disarm:
+                    effectName = "Disarm";
+                    break;
+                  case StatusEffectValue.Silence:
+                    effectName = "Silence";
+                    break;
+                  case StatusEffectValue.Weak:
+                    effectName = "Weakness";
+                    break;
+                }
+                
+                battleState.log.push({
+                  time: battleState.battleTime,
+                  message: `${battleState.bossName} resisted ${effectName}!`,
+                  type: "result",
+                });
               }
-              
-              battleState.log.push({
-                time: battleState.battleTime,
-                message: `${battleState.bossName} ${effectMsg}`,
-                type: "player",
-              });
             }
           }
           
@@ -1010,37 +1291,72 @@ export class GameEngine {
                 type: "boss",
               });
             }
-            // All other effects apply to player
+            // All other effects apply to player (with resistance check)
             else {
-              battleState.playerStatusEffects = addOrRefreshStatusEffect(
-                battleState.playerStatusEffects,
-                statusEffect
+              // Check if status effect is resisted
+              const applicationChance = calculateStatusEffectChance(
+                battleState.bossStats[StatValue.CONC],
+                battleState.playerStats[StatValue.RES]
               );
+              const applied = Math.random() < applicationChance;
               
-              let effectMsg = "";
-              switch (statusEffect.type) {
-                case StatusEffectValue.Stun:
-                  effectMsg = `Stunned for ${statusEffect.duration.toFixed(1)}s`;
-                  break;
-                case StatusEffectValue.Poison:
-                  effectMsg = `Poisoned (${Math.round(statusEffect.value)} dmg/s) for ${statusEffect.duration.toFixed(1)}s`;
-                  break;
-                case StatusEffectValue.Disarm:
-                  effectMsg = `Disarmed for ${statusEffect.duration.toFixed(1)}s`;
-                  break;
-                case StatusEffectValue.Silence:
-                  effectMsg = `Silenced for ${statusEffect.duration.toFixed(1)}s`;
-                  break;
-                case StatusEffectValue.Weak:
-                  effectMsg = `Weakened (${statusEffect.value.toFixed(0)}% less damage) for ${statusEffect.duration.toFixed(1)}s`;
-                  break;
+              if (applied) {
+                battleState.playerStatusEffects = addOrRefreshStatusEffect(
+                  battleState.playerStatusEffects,
+                  statusEffect
+                );
+                
+                let effectMsg = "";
+                switch (statusEffect.type) {
+                  case StatusEffectValue.Stun:
+                    effectMsg = `Stunned for ${statusEffect.duration.toFixed(1)}s`;
+                    break;
+                  case StatusEffectValue.Poison:
+                    effectMsg = `Poisoned (${Math.round(statusEffect.value)} dmg/s) for ${statusEffect.duration.toFixed(1)}s`;
+                    break;
+                  case StatusEffectValue.Disarm:
+                    effectMsg = `Disarmed for ${statusEffect.duration.toFixed(1)}s`;
+                    break;
+                  case StatusEffectValue.Silence:
+                    effectMsg = `Silenced for ${statusEffect.duration.toFixed(1)}s`;
+                    break;
+                  case StatusEffectValue.Weak:
+                    effectMsg = `Weakened (${statusEffect.value.toFixed(0)}% less damage) for ${statusEffect.duration.toFixed(1)}s`;
+                    break;
+                }
+                
+                battleState.log.push({
+                  time: battleState.battleTime,
+                  message: `Player ${effectMsg}`,
+                  type: "boss",
+                });
+              } else {
+                // Status effect resisted
+                let effectName = "";
+                switch (statusEffect.type) {
+                  case StatusEffectValue.Stun:
+                    effectName = "Stun";
+                    break;
+                  case StatusEffectValue.Poison:
+                    effectName = "Poison";
+                    break;
+                  case StatusEffectValue.Disarm:
+                    effectName = "Disarm";
+                    break;
+                  case StatusEffectValue.Silence:
+                    effectName = "Silence";
+                    break;
+                  case StatusEffectValue.Weak:
+                    effectName = "Weakness";
+                    break;
+                }
+                
+                battleState.log.push({
+                  time: battleState.battleTime,
+                  message: `Player resisted ${effectName}!`,
+                  type: "result",
+                });
               }
-              
-              battleState.log.push({
-                time: battleState.battleTime,
-                message: `Player ${effectMsg}`,
-                type: "boss",
-              });
             }
           }
           
@@ -1173,6 +1489,17 @@ export class GameEngine {
       // Unlock ascension system on first boss defeat ever
       if (!newState.ascensionUnlocked) {
         newState.ascensionUnlocked = true;
+      }
+      
+      // Unlock Horde system after defeating Goblin King 5+ times
+      if (!newState.hordeState.unlocked && this.state.currentBossId === "GoblinKing") {
+        const goblinKingDefeats = newBossProgress["GoblinKing"].defeated;
+        if (goblinKingDefeats >= 5) {
+          newState.hordeState = {
+            ...newState.hordeState,
+            unlocked: true,
+          };
+        }
       }
       
       // Always advance to next boss on victory (if there is one)

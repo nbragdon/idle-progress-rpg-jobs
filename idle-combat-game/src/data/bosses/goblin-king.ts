@@ -10,19 +10,19 @@ export const GoblinKing: BossDefinition = {
   id: "GoblinKing",
   name: "Goblin King",
   baseHp: 0, // HP now calculated from CON: 10 + (CON × 10)
-  baseDamage: 100,
+  baseDamage: 125,
   stats: {
-    [StatValue.STR]: 400, // Average strength
-    [StatValue.DEX]: 450,
-    [StatValue.AGI]: 600, // High dodge capability
-    [StatValue.TGH]: 600, // Strong against physical
-    [StatValue.CON]: 400, // 10 + (400 × 10) = 4010 HP (lower health)
-    [StatValue.INT]: 450,
-    [StatValue.FRT]: 600,
-    [StatValue.CONC]: 500,
-    [StatValue.RES]: 300, // Weak to magic damage
-    [StatValue.CRIT_C]: 400, // Reduced crit chance for better balance
-    [StatValue.CRIT_D]: 200, // 200% crit damage
+    [StatValue.STR]: 600, // Average strength
+    [StatValue.DEX]: 675,
+    [StatValue.AGI]: 900, // High dodge capability
+    [StatValue.TGH]: 900, // Strong against physical
+    [StatValue.CON]: 600, // 10 + (600 × 10) = 6010 HP (lower health)
+    [StatValue.INT]: 675,
+    [StatValue.FRT]: 900,
+    [StatValue.CONC]: 750,
+    [StatValue.RES]: 450, // Weak to magic damage
+    [StatValue.CRIT_C]: 600, // Reduced crit chance for better balance
+    [StatValue.CRIT_D]: 250, // 250% crit damage (+25% from 200)
   },
   ascensionPoints: 5,
   nextBoss: "AncientDragon",
@@ -30,7 +30,7 @@ export const GoblinKing: BossDefinition = {
     name: "Vicious Strike",
     cooldown: 3.0,
     effects: [{
-      baseDamage: 100,
+      baseDamage: 125,
       damageType: DamageValue.Physical,
       statusEffect: {
         id: "Weakness" as StatusEffectId,

@@ -14,13 +14,13 @@ const PATH_MAGE: PathDefinition = {
     {
       type: "traitJobExp",
       trait: TraitValue.Magical,
-      baseValue: 2.0, // Starts at 2x
-      maxValue: 4.0,  // Grows to 4x after 1 hour
+      baseValue: 5, // Starts at 2x
+      maxValue: 25,  // Grows to 4x after 1 hour
     },
     {
       type: "skillExp",
-      baseValue: 2.0, // Starts at 2x
-      maxValue: 4.0,  // Grows to 4x after 1 hour
+      baseValue: 5, // Starts at 2x
+      maxValue: 15,  // Grows to 4x after 1 hour
     },
   ],
 };
@@ -35,13 +35,13 @@ const PATH_WARRIOR: PathDefinition = {
     {
       type: "traitJobExp",
       trait: TraitValue.Physical,
-      baseValue: 2.0, // Starts at 2x
-      maxValue: 4.0,  // Grows to 4x after 1 hour
+      baseValue: 5.0, // Starts at 2x
+      maxValue: 25.0,  // Grows to 4x after 1 hour
     },
     {
       type: "jobExp",
-      baseValue: 1.5, // Starts at 1.5x
-      maxValue: 3.0,  // Grows to 3x after 1 hour
+      baseValue: 5, // Starts at 1.5x
+      maxValue: 15,  // Grows to 3x after 1 hour
     },
   ],
 };
@@ -56,13 +56,13 @@ const PATH_ROGUE: PathDefinition = {
     {
       type: "traitJobExp",
       trait: TraitValue.Swift,
-      baseValue: 2.0, // Starts at 2x
-      maxValue: 4.0,  // Grows to 4x after 1 hour
+      baseValue: 5.0, // Starts at 2x
+      maxValue: 25.0,  // Grows to 4x after 1 hour
     },
     {
       type: "abilityExp",
-      baseValue: 3.0, // Starts at 3x
-      maxValue: 6.0,  // Grows to 6x after 1 hour
+      baseValue: 10.0, // Starts at 3x
+      maxValue: 50.0,  // Grows to 6x after 1 hour
     },
   ],
 };
